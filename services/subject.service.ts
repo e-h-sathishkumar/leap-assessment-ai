@@ -19,3 +19,24 @@ export async function createSubject(subject: Subject) {
 
   if (error) throw error;
 }
+
+export async function updateSubject(
+  id: number,
+  subject: Partial<Subject>
+) {
+  const { error } = await supabase
+    .from("subjects")
+    .update(subject)
+    .eq("id", id);
+
+  if (error) throw error;
+}
+
+export async function deleteSubject(id: number) {
+  const { error } = await supabase
+    .from("subjects")
+    .delete()
+    .eq("id", id);
+
+  if (error) throw error;
+}

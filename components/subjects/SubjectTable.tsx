@@ -1,3 +1,6 @@
+import type { Subject } from "@/types/subject";
+import { Badge } from "@/components/ui/badge";
+
 import {
   Table,
   TableBody,
@@ -6,14 +9,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-interface Subject {
-  id: number;
-  name: string;
-  code: string;
-  description?: string;
-  is_active?: boolean;
-}
 
 interface SubjectTableProps {
   subjects: Subject[];
@@ -48,10 +43,16 @@ export default function SubjectTable({
                 {subject.name}
               </TableCell>
 
-              <TableCell>{subject.code}</TableCell>
+              <TableCell>
+                {subject.code}
+              </TableCell>
 
               <TableCell>
-                {subject.is_active ? "Active" : "Inactive"}
+                <Badge
+                  variant={subject.is_active ? "default" : "secondary"}
+                >
+                  {subject.is_active ? "Active" : "Inactive"}
+                </Badge>
               </TableCell>
             </TableRow>
           ))}
