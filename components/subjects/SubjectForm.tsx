@@ -30,34 +30,26 @@ export default function SubjectForm({
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit(formData: FormData) {
-    try {
-      setLoading(true);
+    setLoading(true);
 
-      if (mode === "create") {
-        await createSubjectAction(formData);
+    const result =
+      mode === "create"
+        ? await createSubjectAction(formData)
+        : await updateSubjectAction(
+            subject!.id!,
+            formData
+          );
 
-        toast.success("Subject created successfully.");
-      } else {
-        await updateSubjectAction(
-          subject!.id!,
-          formData
-        );
+    setLoading(false);
 
-        toast.success("Subject updated successfully.");
-      }
-
-      onSuccess?.();
-    } catch (error) {
-      console.error(error);
-
-      toast.error(
-        mode === "create"
-          ? "Unable to create subject."
-          : "Unable to update subject."
-      );
-    } finally {
-      setLoading(false);
+    if (!result.success) {
+      toast.error(result.message);
+      return;
     }
+
+    toast.success(result.message);
+
+    onSuccess?.();
   }
 
   return (

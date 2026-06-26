@@ -5,6 +5,8 @@ import { useState } from "react";
 import { deleteSubjectAction } from "@/app/repository/subjects/actions";
 import type { Subject } from "@/types/subject";
 
+import { toast } from "sonner";
+
 import { Button } from "@/components/ui/button";
 
 import {
@@ -26,31 +28,41 @@ export default function DeleteSubjectDialog({
   const [loading, setLoading] = useState(false);
 
   async function handleDelete() {
-    try {
-      setLoading(true);
+    setLoading(true);
 
-      await deleteSubjectAction(subject.id!);
+    const result = await deleteSubjectAction(subject.id!);
 
-      setOpen(false);
-    } catch (error) {
-      console.error(error);
-      alert("Unable to delete subject.");
-    } finally {
-      setLoading(false);
+    setLoading(false);
+
+    if (!result.success) {
+      toast.error(result.message);
+      return;
     }
+
+    toast.success(result.message);
+
+    setOpen(false);
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={setOpen}
+    >
       <DialogTrigger asChild>
-        <Button variant="destructive" size="sm">
+        <Button
+          variant="destructive"
+          size="sm"
+        >
           Delete
         </Button>
       </DialogTrigger>
 
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Delete Subject</DialogTitle>
+          <DialogTitle>
+            Delete Subject
+          </DialogTitle>
         </DialogHeader>
 
         <p className="text-sm text-slate-600">
@@ -66,6 +78,7 @@ export default function DeleteSubjectDialog({
           <Button
             variant="outline"
             onClick={() => setOpen(false)}
+            disabled={loading}
           >
             Cancel
           </Button>
@@ -75,7 +88,9 @@ export default function DeleteSubjectDialog({
             onClick={handleDelete}
             disabled={loading}
           >
-            {loading ? "Deleting..." : "Delete"}
+            {loading
+              ? "Deleting..."
+              : "Delete"}
           </Button>
         </div>
       </DialogContent>
