@@ -31,16 +31,27 @@ export async function updateSubjectAction(
   id: number,
   formData: FormData
 ) {
+  console.log("========== UPDATE SUBJECT ==========");
+  console.log("ID:", id);
+
   const name = formData.get("name")?.toString().trim() ?? "";
   const code = formData.get("code")?.toString().trim() ?? "";
   const description =
     formData.get("description")?.toString().trim() ?? "";
+
+  console.log({
+    name,
+    code,
+    description,
+  });
 
   await updateSubject(id, {
     name,
     code,
     description,
   });
+
+  console.log("UPDATE SUCCESS");
 
   revalidatePath("/repository/subjects");
 }

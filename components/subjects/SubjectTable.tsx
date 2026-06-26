@@ -1,5 +1,8 @@
 import type { Subject } from "@/types/subject";
+import DeleteSubjectDialog from "./DeleteSubjectDialog";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import EditSubjectDialog from "./EditSubjectDialog";
 
 import {
   Table,
@@ -26,13 +29,16 @@ export default function SubjectTable({
   }
 
   return (
-    <div className="rounded-lg border bg-white">
+    <div className="rounded-lg border bg-white shadow-sm">
       <Table>
         <TableHeader>
           <TableRow>
             <TableHead>Name</TableHead>
             <TableHead>Code</TableHead>
             <TableHead>Status</TableHead>
+            <TableHead className="text-right">
+              Actions
+            </TableHead>
           </TableRow>
         </TableHeader>
 
@@ -49,10 +55,28 @@ export default function SubjectTable({
 
               <TableCell>
                 <Badge
-                  variant={subject.is_active ? "default" : "secondary"}
+                  variant={
+                    subject.is_active
+                      ? "default"
+                      : "secondary"
+                  }
                 >
-                  {subject.is_active ? "Active" : "Inactive"}
+                  {subject.is_active
+                    ? "Active"
+                    : "Inactive"}
                 </Badge>
+              </TableCell>
+
+              <TableCell className="text-right">
+                <div className="flex justify-end gap-2">
+                  <EditSubjectDialog
+                    subject={subject}
+                  />
+
+                  <DeleteSubjectDialog
+  subject={subject}
+/>
+                </div>
               </TableCell>
             </TableRow>
           ))}

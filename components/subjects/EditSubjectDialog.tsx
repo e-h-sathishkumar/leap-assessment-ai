@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import type { Subject } from "@/types/subject";
+
 import {
   Dialog,
   DialogContent,
@@ -13,7 +15,13 @@ import {
 import { Button } from "@/components/ui/button";
 import SubjectForm from "./SubjectForm";
 
-export default function AddSubjectDialog() {
+interface EditSubjectDialogProps {
+  subject: Subject;
+}
+
+export default function EditSubjectDialog({
+  subject,
+}: EditSubjectDialogProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -22,16 +30,24 @@ export default function AddSubjectDialog() {
       onOpenChange={setOpen}
     >
       <DialogTrigger asChild>
-        <Button>Add Subject</Button>
+        <Button
+          variant="outline"
+          size="sm"
+        >
+          Edit
+        </Button>
       </DialogTrigger>
 
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Add Subject</DialogTitle>
+          <DialogTitle>
+            Edit Subject
+          </DialogTitle>
         </DialogHeader>
 
         <SubjectForm
-          mode="create"
+          mode="edit"
+          subject={subject}
           onSuccess={() => setOpen(false)}
         />
       </DialogContent>
