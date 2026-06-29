@@ -8,8 +8,10 @@ export default function PageContainer({
   children,
 }: PageContainerProps) {
   return (
-    <div className="mx-auto w-full max-w-7xl px-6 py-6">
-      {children}
-    </div>
+    <main className="flex-1">
+      <div className="mx-auto w-full max-w-7xl space-y-6 p-6">
+        {children}
+      </div>
+    </main>
   );
 }
