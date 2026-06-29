@@ -1,36 +1,26 @@
-export interface Test {
-  id: number;
+// ====================================================
+// File      : test.ts
+// Module    : Assessment
+// Purpose   : Create Test Form Model
+// ====================================================
 
+export interface CreateTestForm {
+  // Step 1
   title: string;
+  examType: string;
+  academicYear: string;
+  classLevel: string;
+  subjectIds: string[];
+  language: string;
+  difficulty: string;
+  description: string;
 
-  exam: "NEET" | "JEE Main" | "JEE Advanced" | "CBSE";
-
-  subject_id: number;
-
-  duration_minutes: number;
-
-  total_marks: number;
-
-  negative_marks: number;
-
-  instructions?: string;
-
-  status: "Draft" | "Published" | "Archived";
-
-  start_time?: string | null;
-
-  end_time?: string | null;
-
-  is_active: boolean;
-
-  created_at?: string;
-
-  updated_at?: string;
-}
-
-export interface TestWithSubject extends Test {
-  subjects?: {
-    id: number;
-    name: string;
-  };
+  // Step 2
+  duration: number;
+  totalQuestions: number;
+  maximumMarks: number;
+  passingMarks: number;
+  marksPerQuestion: number;
+  negativeMarking: boolean;
+  negativeMarks: number;
 }
