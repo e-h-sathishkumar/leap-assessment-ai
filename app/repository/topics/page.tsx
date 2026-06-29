@@ -1,13 +1,21 @@
-export default function TopicsPage() {
-  return (
-    <div>
-      <h1 className="text-3xl font-bold">
-        Topic Management
-      </h1>
+import TopicsClient from "@/components/topics/TopicsClient";
 
-      <p className="mt-2 text-slate-600">
-        Coming Soon
-      </p>
-    </div>
+import { getTopics } from "@/services/topic.service";
+import { getSubjects } from "@/services/subject.service";
+import { getChapters } from "@/services/chapter.service";
+
+export default async function TopicsPage() {
+  const topics = await getTopics();
+
+  const subjects = await getSubjects();
+
+  const chapters = await getChapters();
+
+  return (
+    <TopicsClient
+      topics={topics}
+      subjects={subjects}
+      chapters={chapters}
+    />
   );
 }

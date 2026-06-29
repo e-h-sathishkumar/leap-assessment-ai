@@ -1,9 +1,9 @@
 import { z } from "zod";
 
 export const ChapterSchema = z.object({
-  subject_id: z.number({
-    required_error: "Subject is required.",
-  }),
+  subject_id: z.coerce
+    .number()
+    .min(1, "Subject is required."),
 
   name: z
     .string()
@@ -17,7 +17,12 @@ export const ChapterSchema = z.object({
     .min(1, "Chapter code is required.")
     .max(20),
 
-  description: z.string().optional(),
+  description: z
+    .string()
+    .trim()
+    .optional(),
 });
 
-export type ChapterInput = z.infer<typeof ChapterSchema>;
+export type ChapterInput = z.infer<
+  typeof ChapterSchema
+>;

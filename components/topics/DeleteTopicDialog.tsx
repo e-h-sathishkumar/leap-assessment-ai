@@ -2,9 +2,8 @@
 
 import { useState } from "react";
 
-import { deleteChapterAction } from "@/app/repository/chapters/actions";
-
-import type { Chapter } from "@/types/chapter";
+import { deleteTopicAction } from "@/app/repository/topics/actions";
+import type { Topic } from "@/types/topic";
 
 import { toast } from "sonner";
 
@@ -18,22 +17,20 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
-interface DeleteChapterDialogProps {
-  chapter: Chapter;
+interface DeleteTopicDialogProps {
+  topic: Topic;
 }
 
-export default function DeleteChapterDialog({
-  chapter,
-}: DeleteChapterDialogProps) {
+export default function DeleteTopicDialog({
+  topic,
+}: DeleteTopicDialogProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
   async function handleDelete() {
     setLoading(true);
 
-    const result = await deleteChapterAction(
-      chapter.id!
-    );
+    const result = await deleteTopicAction(topic.id!);
 
     setLoading(false);
 
@@ -43,7 +40,6 @@ export default function DeleteChapterDialog({
     }
 
     toast.success(result.message);
-
     setOpen(false);
   }
 
@@ -64,13 +60,13 @@ export default function DeleteChapterDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>
-            Delete Chapter
+            Delete Topic
           </DialogTitle>
         </DialogHeader>
 
         <p className="text-sm text-slate-600">
           Are you sure you want to delete{" "}
-          <strong>{chapter.name}</strong>?
+          <strong>{topic.name}</strong>?
         </p>
 
         <p className="text-sm text-red-500">
@@ -78,7 +74,6 @@ export default function DeleteChapterDialog({
         </p>
 
         <div className="flex justify-end gap-2 pt-4">
-
           <Button
             variant="outline"
             onClick={() => setOpen(false)}
@@ -92,11 +87,8 @@ export default function DeleteChapterDialog({
             onClick={handleDelete}
             disabled={loading}
           >
-            {loading
-              ? "Deleting..."
-              : "Delete"}
+            {loading ? "Deleting..." : "Delete"}
           </Button>
-
         </div>
       </DialogContent>
     </Dialog>

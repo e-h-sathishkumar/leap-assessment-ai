@@ -8,6 +8,7 @@ import {
 } from "@/app/repository/chapters/actions";
 
 import type { Chapter } from "@/types/chapter";
+import type { Subject } from "@/types/subject";
 
 import { toast } from "sonner";
 
@@ -16,18 +17,32 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
 interface ChapterFormProps {
   mode: "create" | "edit";
   chapter?: Chapter;
+  subjects: Subject[];
   onSuccess?: () => void;
 }
 
 export default function ChapterForm({
   mode,
   chapter,
+  subjects,
   onSuccess,
 }: ChapterFormProps) {
   const [loading, setLoading] = useState(false);
+
+  const [subjectId, setSubjectId] = useState(
+    chapter?.subject_id?.toString() ?? ""
+  );
 
   async function handleSubmit(formData: FormData) {
     setLoading(true);
@@ -47,17 +62,9 @@ export default function ChapterForm({
       return;
     }
 
-    console.log("Action Result:", result);
+    toast.success(result.message);
 
-if (!result.success) {
-  toast.error(result.message);
-  return;
-}
-
-toast.success(result.message);
-
-console.log("Calling onSuccess()");
-onSuccess?.();
+    onSuccess?.();
   }
 
   return (
@@ -65,18 +72,33 @@ onSuccess?.();
       action={handleSubmit}
       className="space-y-4"
     >
-      <div>
-        <Label htmlFor="subject_id">
-          Subject ID
-        </Label>
+      <div className="space-y-2">
+        <Label>Subject</Label>
 
-        <Input
-          id="subject_id"
+        <Select
+          value={subjectId}
+          onValueChange={setSubjectId}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select Subject" />
+          </SelectTrigger>
+
+          <SelectContent>
+            {subjects.map((subject) => (
+              <SelectItem
+                key={subject.id}
+                value={subject.id!.toString()}
+              >
+                {subject.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <input
+          type="hidden"
           name="subject_id"
-          type="number"
-          defaultValue={chapter?.subject_id}
-          placeholder="1"
-          required
+          value={subjectId}
         />
       </div>
 

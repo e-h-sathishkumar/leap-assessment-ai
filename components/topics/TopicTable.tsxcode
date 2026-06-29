@@ -1,9 +1,11 @@
-import type { Subject } from "@/types/subject";
+"use client";
 
-import DeleteSubjectDialog from "./DeleteSubjectDialog";
-import EditSubjectDialog from "./EditSubjectDialog";
+import type { Topic } from "@/types/topic";
 
 import { Badge } from "@/components/ui/badge";
+
+import EditTopicDialog from "./EditTopicDialog";
+import DeleteTopicDialog from "./DeleteTopicDialog";
 
 import {
   Table,
@@ -14,28 +16,29 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-interface SubjectTableProps {
-  subjects: Subject[];
+interface TopicTableProps {
+  topics: Topic[];
 }
 
-export default function SubjectTable({
-  subjects,
-}: SubjectTableProps) {
-  if (subjects.length === 0) {
+export default function TopicTable({
+  topics,
+}: TopicTableProps) {
+  if (topics.length === 0) {
     return (
       <div className="rounded-lg border p-6 text-center text-slate-500">
-        No subjects found.
+        No topics found.
       </div>
     );
   }
 
   return (
-    <div className="rounded-lg border bg-white shadow-sm">
+    <div className="rounded-lg border bg-white shadow-sm overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Name</TableHead>
-            <TableHead>Code</TableHead>
+            <TableHead>Subject</TableHead>
+            <TableHead>Chapter</TableHead>
+            <TableHead>Topic</TableHead>
             <TableHead>Status</TableHead>
             <TableHead className="text-right">
               Actions
@@ -44,25 +47,29 @@ export default function SubjectTable({
         </TableHeader>
 
         <TableBody>
-          {subjects.map((subject) => (
-            <TableRow key={subject.id}>
-              <TableCell className="font-medium">
-                {subject.name}
+          {topics.map((topic) => (
+            <TableRow key={topic.id}>
+              <TableCell>
+                {topic.chapters?.subjects?.name ?? "-"}
               </TableCell>
 
               <TableCell>
-                {subject.code}
+                {topic.chapters?.name ?? "-"}
+              </TableCell>
+
+              <TableCell className="font-medium">
+                {topic.name}
               </TableCell>
 
               <TableCell>
                 <Badge
                   variant={
-                    subject.is_active
+                    topic.is_active
                       ? "default"
                       : "secondary"
                   }
                 >
-                  {subject.is_active
+                  {topic.is_active
                     ? "Active"
                     : "Inactive"}
                 </Badge>
@@ -70,13 +77,15 @@ export default function SubjectTable({
 
               <TableCell className="text-right">
                 <div className="flex justify-end gap-2">
-                  <EditSubjectDialog
-                    subject={subject}
+
+                  <EditTopicDialog
+                    topic={topic}
                   />
 
-                 <DeleteSubjectDialog
-  subject={subject}
-/>
+                  <DeleteTopicDialog
+                    topic={topic}
+                  />
+
                 </div>
               </TableCell>
             </TableRow>
