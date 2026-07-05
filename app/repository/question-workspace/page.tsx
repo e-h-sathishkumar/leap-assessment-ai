@@ -1,34 +1,11 @@
-import QuestionWizard from "@/components/question-workspace/wizard/QuestionWizard";
-import AIGeneratorForm from "@/components/question-workspace/ai/AIGeneratorForm";
+import QuestionWorkspace from "@/components/question-workspace/QuestionWorkspace";
 
-import {
-  getSubjects,
-  getChapters,
-  getTopics,
-} from "@/services/lookup.service";
+import GeneratedQuestionsProvider from "@/components/question-editor/context/GeneratedQuestionsProvider";
 
-export default async function QuestionWorkspacePage() {
-  const [
-    subjects,
-    chapters,
-    topics,
-  ] = await Promise.all([
-    getSubjects(),
-    getChapters(),
-    getTopics(),
-  ]);
-
+export default function Page() {
   return (
-    <div className="space-y-10">
-
-      <QuestionWizard />
-
-      <AIGeneratorForm
-        subjects={subjects}
-        chapters={chapters}
-        topics={topics}
-      />
-
-    </div>
+    <GeneratedQuestionsProvider>
+      <QuestionWorkspace />
+    </GeneratedQuestionsProvider>
   );
 }

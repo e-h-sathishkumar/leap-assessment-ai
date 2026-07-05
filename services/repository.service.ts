@@ -1,37 +1,39 @@
 import { supabase } from "@/lib/supabase";
-
 export async function getSubjects() {
   const { data, error } = await supabase
     .from("subjects")
     .select("*")
-    .eq("is_active", true)
     .order("name");
 
   if (error) throw error;
 
-  return data ?? [];
+  return data;
 }
 
-export async function getChapters() {
+export async function getChapters(subjectId: string) {
   const { data, error } = await supabase
     .from("chapters")
     .select("*")
-    .eq("is_active", true)
+    .eq("subject_id", subjectId)
     .order("name");
 
   if (error) throw error;
 
-  return data ?? [];
+  return data;
 }
 
-export async function getTopics() {
+export async function getTopics(chapterId: string) {
+  console.log("Fetching Topics for Chapter:", chapterId);
+
   const { data, error } = await supabase
     .from("topics")
     .select("*")
-    .eq("is_active", true)
-    .order("name");
+    .eq("chapter_id", chapterId);
+
+  console.log("Topics:", data);
+  console.log("Error:", error);
 
   if (error) throw error;
 
-  return data ?? [];
+  return data;
 }

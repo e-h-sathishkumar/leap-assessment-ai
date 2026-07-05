@@ -1,15 +1,18 @@
 import { supabase } from "@/lib/supabase";
-import { Subject } from "@/types/subject";
+import type { Subject } from "@/types/subject";
 
-export async function getSubjects() {
+export async function getSubjects(): Promise<Subject[]> {
   const { data, error } = await supabase
     .from("subjects")
     .select("*")
-    .order("name", { ascending: true });
+    .order("name");
 
-  if (error) throw error;
+  if (error) {
+    console.error("Supabase Error:", error);
+    throw new Error(error.message);
+  }
 
-  return data ?? [];
+  return (data ?? []) as Subject[];
 }
 
 export async function createSubject(subject: Subject) {

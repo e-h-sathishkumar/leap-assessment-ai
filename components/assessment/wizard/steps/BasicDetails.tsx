@@ -1,17 +1,21 @@
 "use client";
 
-// ====================================================
-// Component : BasicDetails
-// Module    : Assessment Wizard
-// Purpose   : Step 1 - Assessment Information
-// ====================================================
-
+import { useEffect, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
+
 import FormInput from "@/components/shared/form/FormInput";
+
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
+import { getSubjects } from "@/services/subject.service";
+import { getChapters } from "@/services/chapter.service";
+import { getTopicsByChapter } from "@/services/topic.service";
+
+import type { Subject } from "@/types/subject";
+import type { Chapter } from "@/types/chapter";
+import type { Topic } from "@/types/topic";
 import type { CreateTestForm } from "@/types/test";
 
 interface BasicDetailsProps {
@@ -23,6 +27,71 @@ export default function BasicDetails({
   form,
   setForm,
 }: BasicDetailsProps) {
+
+  const [subjects, setSubjects] =
+    useState<Subject[]>([]);
+
+  const [chapters, setChapters] =
+    useState<Chapter[]>([]);
+
+  const [topics, setTopics] =
+    useState<Topic[]>([]);
+
+  const [loadingSubjects, setLoadingSubjects] =
+    useState(true);
+
+  const [loadingChapters, setLoadingChapters] =
+    useState(false);
+
+  const [loadingTopics, setLoadingTopics] =
+    useState(false);
+
+  useEffect(() => {
+    async function loadSubjects() {
+      try {
+        const data = await getSubjects();
+        setSubjects(data);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoadingSubjects(false);
+      }
+    }
+
+    loadSubjects();
+  }, []);
+
+  async function loadChapters(subjectId: number) {
+    try {
+      setLoadingChapters(true);
+
+      const data = await getChapters(subjectId);
+
+      setChapters(data);
+      setTopics([]);
+
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoadingChapters(false);
+    }
+  }
+
+  async function loadTopics(chapterId: number) {
+    try {
+      setLoadingTopics(true);
+
+      const data =
+        await getTopicsByChapter(chapterId);
+
+      setTopics(data);
+
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoadingTopics(false);
+    }
+  }
   return (
     <div className="rounded-xl border bg-white p-8 shadow-sm">
 
@@ -50,28 +119,47 @@ export default function BasicDetails({
     })
   }
 />
+<div className="space-y-2">
+  <Label>Subject *</Label>
 
-        <div className="space-y-2">
-          <Label>Exam Type *</Label>
+  <select
+    value={form.subjectId ?? ""}
+    onChange={async (e) => {
+      const value = e.target.value;
 
-          <select
-            value={form.examType}
-            onChange={(e) =>
-              setForm({
-                ...form,
-                examType: e.target.value,
-              })
-            }
-            className="w-full rounded-md border border-slate-300 px-3 py-2"
-          >
-            <option value="">Select Exam</option>
-            <option>NEET</option>
-            <option>JEE Main</option>
-            <option>JEE Advanced</option>
-            <option>CBSE</option>
-            <option>Olympiad</option>
-          </select>
-        </div>
+      setForm({
+        ...form,
+        subjectId: value ? Number(value) : null,
+        chapterId: null,
+        topicId: null,
+      });
+
+      if (value) {
+        await loadChapters(Number(value));
+      } else {
+        setChapters([]);
+        setTopics([]);
+      }
+    }}
+    className="w-full rounded-md border border-slate-300 px-3 py-2"
+  >
+    <option value="">
+      {loadingSubjects
+        ? "Loading Subjects..."
+        : "Select Subject"}
+    </option>
+
+    {subjects.map((subject) => (
+      <option
+        key={subject.id}
+        value={subject.id}
+      >
+        {subject.name}
+      </option>
+    ))}
+  </select>
+</div>
+
 
         <div className="space-y-2">
           <Label>Academic Year</Label>

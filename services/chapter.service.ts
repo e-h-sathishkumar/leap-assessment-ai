@@ -1,46 +1,24 @@
 import { supabase } from "@/lib/supabase";
-import { Chapter } from "@/types/chapter";
+import type { Chapter } from "@/types/chapter";
 
-export async function getChapters() {
-  const { data, error } = await supabase
+export async function getChapters(subjectId?: number): Promise<Chapter[]> {
+  let query = supabase
     .from("chapters")
-    .select(`
-      *,
-      subjects (
-        id,
-        name
-      )
-    `)
+    .select("*")
     .order("name", { ascending: true });
+
+  if (subjectId) {
+    query = query.eq("subject_id", subjectId);
+  }
+
+  const { data, error } = await query;
 
   if (error) throw error;
 
-  return data ?? [];
+  return (data ?? []) as Chapter[];
 }
 
-export async function getChaptersBySubject(
-  subjectId: number
-) {
-  const { data, error } = await supabase
-    .from("chapters")
-    .select(`
-      *,
-      subjects (
-        id,
-        name
-      )
-    `)
-    .eq("subject_id", subjectId)
-    .order("name", { ascending: true });
-
-  if (error) throw error;
-
-  return data ?? [];
-}
-
-export async function createChapter(
-  chapter: Chapter
-) {
+export async function createChapter(chapter: Chapter) {
   const { error } = await supabase
     .from("chapters")
     .insert(chapter);
@@ -60,9 +38,7 @@ export async function updateChapter(
   if (error) throw error;
 }
 
-export async function deleteChapter(
-  id: number
-) {
+export async function deleteChapter(id: number) {
   const { error } = await supabase
     .from("chapters")
     .delete()

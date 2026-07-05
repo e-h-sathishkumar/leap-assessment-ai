@@ -1,56 +1,147 @@
 "use client";
 
-import QuestionCard from "./QuestionCard";
+import { useEffect, useState } from "react";
 
-interface AIQuestion {
-  question: string;
-
-  options: {
-    A: string;
-    B: string;
-    C: string;
-    D: string;
-  };
-
-  correct_answer: string;
-
-  explanation?: string;
-
-  hint?: string;
-
-  difficulty?: string;
-
-  bloom_level?: string;
-
-  learning_objective?: string;
-
-  tags?: string[];
-}
+import QuestionToolbar from "./QuestionToolbar";
+import QuestionCard, { AIQuestion } from "./QuestionCard";
 
 interface GeneratedQuestionsProps {
   questions: AIQuestion[];
+
+  mode?: "repository" | "assessment";
+
+  onSave?: (questions: AIQuestion[]) => void;
+
+  onAddToTest?: (questions: AIQuestion[]) => void;
 }
 
 export default function GeneratedQuestions({
   questions,
+  mode = "repository",
+  onSave,
+  onAddToTest,
 }: GeneratedQuestionsProps) {
-  if (questions.length === 0) {
+  const [items, setItems] = useState<AIQuestion[]>([]);
+  const [selected, setSelected] = useState<number[]>([]);
+useEffect(() => {
+  setItems(questions);
+
+  // Automatically select all generated questions
+  setSelected(
+    questions.map((_, index) => index)
+  );
+}, [questions]);
+
+
+  if (items.length === 0) {
     return null;
   }
 
+  function toggle(index: number) {
+    setSelected((previous) =>
+      previous.includes(index)
+        ? previous.filter((i) => i !== index)
+        : [...previous, index]
+    );
+  }
+
+  function selectAll() {
+    setSelected(items.map((_, index) => index));
+  }
+
+  function clearSelection() {
+    setSelected([]);
+  }
+
+  function updateQuestion(
+    index: number,
+    updatedQuestion: AIQuestion
+  ) {
+    const updated = [...items];
+    updated[index] = updatedQuestion;
+    setItems(updated);
+  }
+
+  function duplicateQuestion(index: number) {
+    const updated = [...items];
+
+    updated.splice(index + 1, 0, {
+      ...items[index],
+    });
+
+    setItems(updated);
+  }
+
+  function deleteQuestion(index: number) {
+    setItems(items.filter((_, i) => i !== index));
+
+    setSelected((previous) =>
+      previous.filter((i) => i !== index)
+    );
+  }
+
+  const selectedQuestions = items.filter((_, index) =>
+    selected.includes(index)
+  );
+
   return (
-    <div className="mt-8 space-y-6">
+    <div className="space-y-6">
 
-      <h2 className="text-2xl font-bold">
-        Generated Questions
-      </h2>
+      <QuestionToolbar
+        total={items.length}
+        selected={selected.length}
+        mode={mode}
+        onSelectAll={selectAll}
+        onClearSelection={clearSelection}
+        onSave={() => onSave?.(selectedQuestions)}
+        onAddToTest={() => {
+  console.log("===== ADD TO TEST =====");
+  console.log("Selected:", selectedQuestions.length);
+  console.log(selectedQuestions);
 
-      {questions.map((question, index) => (
-        <QuestionCard
+  onAddToTest?.(selectedQuestions);
+}}
+      />
+
+      {items.map((question, index) => (
+        <div
           key={index}
-          question={question}
-          index={index + 1}
-        />
+          className={`rounded-xl border transition ${
+            selected.includes(index)
+              ? "border-blue-500 bg-blue-50"
+              : ""
+          }`}
+        >
+          <div className="flex gap-4 p-4">
+
+            <input
+              type="checkbox"
+              checked={selected.includes(index)}
+              onChange={() => toggle(index)}
+              className="mt-2 h-5 w-5"
+            />
+
+            <div className="flex-1">
+
+              <QuestionCard
+                question={question}
+                index={index + 1}
+                onUpdate={(updated) =>
+                  updateQuestion(index, updated)
+                }
+                onDuplicate={() =>
+                  duplicateQuestion(index)
+                }
+                onDelete={() =>
+                  deleteQuestion(index)
+                }
+              />
+
+            </div>
+
+          </div>
+
+        </div>
       ))}
 
     </div>

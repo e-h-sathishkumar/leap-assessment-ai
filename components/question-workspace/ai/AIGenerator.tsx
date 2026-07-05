@@ -4,22 +4,31 @@ import type { Subject } from "@/types/subject";
 import type { Chapter } from "@/types/chapter";
 import type { Topic } from "@/types/topic";
 
+import type { AIQuestion } from "./QuestionCard";
+
 import AIGeneratorForm from "./AIGeneratorForm";
 
 interface AIGeneratorProps {
   subjects: Subject[];
   chapters: Chapter[];
   topics: Topic[];
+
+  onAddToTest?: (
+    questions: AIQuestion[]
+  ) => void;
 }
 
 export default function AIGenerator({
   subjects,
   chapters,
   topics,
+  onAddToTest,
 }: AIGeneratorProps) {
   return (
     <div className="space-y-6">
+
       <div>
+
         <h1 className="text-3xl font-bold">
           🤖 AI Question Generator
         </h1>
@@ -28,13 +37,16 @@ export default function AIGenerator({
           Generate high-quality NEET, JEE and CBSE
           questions using AI.
         </p>
+
       </div>
 
       <AIGeneratorForm
         subjects={subjects}
         chapters={chapters}
         topics={topics}
+        onAddToTest={onAddToTest}
       />
+
     </div>
   );
 }

@@ -6,10 +6,8 @@
 
 export const TEST_WIZARD_STEPS = [
   "Basic Details",
-  "Test Pattern",
-  "Question Selection",
+  "Question Builder",
   "Review",
-  "Publish",
 ] as const;
 
 export type TestWizardStep =

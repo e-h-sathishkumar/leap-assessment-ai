@@ -49,14 +49,17 @@ interface AIGeneratorFormProps {
   subjects: Subject[];
   chapters: Chapter[];
   topics: Topic[];
-}
 
-export default function AIGeneratorForm({
+  onAddToTest?: (
+    questions: AIQuestion[]
+  ) => void;
+}export default function AIGeneratorForm({
   subjects,
   chapters,
   topics,
+  onAddToTest,
 }: AIGeneratorFormProps) {
-
+  
   const [loading, setLoading] =
     useState(false);
 
@@ -336,10 +339,11 @@ export default function AIGeneratorForm({
         </div>
 
       </div>
-
-      <GeneratedQuestions
-        questions={questions}
-      />
+<GeneratedQuestions
+  questions={questions}
+  mode="assessment"
+  onAddToTest={onAddToTest}
+/>
 
     </div>
   );

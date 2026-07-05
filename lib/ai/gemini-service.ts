@@ -6,12 +6,15 @@ const ai = new GoogleGenAI({
 
 export async function generateWithGemini(
   prompt: string
-) {
-  const response =
-    await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: prompt,
-    });
+): Promise<string> {
+  const response = await ai.models.generateContent({
+    model: "gemini-2.5-flash",
+    contents: prompt,
+  });
+
+  console.log("========== RAW GEMINI RESPONSE ==========");
+  console.dir(response, { depth: null });
+  console.log("=========================================");
 
   return response.text ?? "";
 }
