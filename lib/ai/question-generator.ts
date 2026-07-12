@@ -11,6 +11,9 @@ export async function generateQuestions(
   const prompt = buildPrompt(request);
 
   const response = await generateWithGemini(prompt);
+  console.log("========== GEMINI RAW RESPONSE ==========");
+console.log(response);
+console.log("=========================================");
 
   console.log("========== GEMINI RAW RESPONSE ==========");
   console.log(response);

@@ -22,9 +22,11 @@ export default function TestPattern({
   form,
   setForm,
 }: TestPatternProps) {
+  const calculatedMarks =
+    form.totalQuestions * form.marksPerQuestion;
+
   return (
     <div className="rounded-xl border bg-white p-8 shadow-sm">
-
       <div className="mb-8">
         <h2 className="text-2xl font-bold">
           Test Pattern
@@ -37,8 +39,11 @@ export default function TestPattern({
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
 
+        {/* Duration */}
+
         <div>
           <Label>Duration (Minutes)</Label>
+
           <Input
             type="number"
             value={form.duration}
@@ -51,77 +56,107 @@ export default function TestPattern({
           />
         </div>
 
+        {/* Total Questions */}
+
         <div>
           <Label>Total Questions</Label>
+
           <Input
             type="number"
             value={form.totalQuestions}
-            onChange={(e) =>
+            onChange={(e) => {
+              const totalQuestions = Number(
+                e.target.value
+              );
+
               setForm({
                 ...form,
-                totalQuestions: Number(e.target.value),
-              })
-            }
+                totalQuestions,
+                maximumMarks:
+                  totalQuestions *
+                  form.marksPerQuestion,
+              });
+            }}
           />
         </div>
+
+        {/* Maximum Marks */}
 
         <div>
           <Label>Maximum Marks</Label>
+
           <Input
             type="number"
-            value={form.maximumMarks}
-            onChange={(e) =>
-              setForm({
-                ...form,
-                maximumMarks: Number(e.target.value),
-              })
-            }
+            value={calculatedMarks}
+            readOnly
+            className="bg-slate-100"
           />
         </div>
 
+        {/* Passing Marks */}
+
         <div>
           <Label>Passing Marks</Label>
+
           <Input
             type="number"
             value={form.passingMarks}
             onChange={(e) =>
               setForm({
                 ...form,
-                passingMarks: Number(e.target.value),
+                passingMarks: Number(
+                  e.target.value
+                ),
               })
             }
           />
         </div>
+
+        {/* Marks Per Question */}
 
         <div>
           <Label>Marks Per Question</Label>
+
           <Input
             type="number"
             value={form.marksPerQuestion}
-            onChange={(e) =>
+            onChange={(e) => {
+              const marksPerQuestion =
+                Number(e.target.value);
+
               setForm({
                 ...form,
-                marksPerQuestion: Number(e.target.value),
-              })
-            }
+                marksPerQuestion,
+                maximumMarks:
+                  form.totalQuestions *
+                  marksPerQuestion,
+              });
+            }}
           />
         </div>
 
+        {/* Negative Marks */}
+
         <div>
           <Label>Negative Marks</Label>
+
           <Input
             type="number"
+            disabled={!form.negativeMarking}
             value={form.negativeMarks}
             onChange={(e) =>
               setForm({
                 ...form,
-                negativeMarks: Number(e.target.value),
+                negativeMarks: Number(
+                  e.target.value
+                ),
               })
             }
           />
         </div>
-
       </div>
+
+      {/* Negative Marking */}
 
       <div className="mt-6 flex items-center gap-3">
         <input
@@ -131,7 +166,8 @@ export default function TestPattern({
           onChange={(e) =>
             setForm({
               ...form,
-              negativeMarking: e.target.checked,
+              negativeMarking:
+                e.target.checked,
             })
           }
         />
@@ -141,6 +177,42 @@ export default function TestPattern({
         </Label>
       </div>
 
+      {/* Test Summary */}
+
+      <div className="mt-8 rounded-xl border bg-blue-50 p-6">
+        <h3 className="text-lg font-semibold">
+          Test Summary
+        </h3>
+
+        <div className="mt-4 grid grid-cols-2 gap-4">
+          <p>
+            <strong>Questions:</strong>{" "}
+            {form.totalQuestions}
+          </p>
+
+          <p>
+            <strong>Duration:</strong>{" "}
+            {form.duration} Minutes
+          </p>
+
+          <p>
+            <strong>Marks / Question:</strong>{" "}
+            {form.marksPerQuestion}
+          </p>
+
+          <p>
+            <strong>Total Marks:</strong>{" "}
+            {calculatedMarks}
+          </p>
+
+          <p>
+            <strong>Negative Mark:</strong>{" "}
+            {form.negativeMarking
+              ? form.negativeMarks
+              : "Disabled"}
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

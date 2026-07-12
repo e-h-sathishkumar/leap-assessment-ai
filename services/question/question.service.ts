@@ -1,12 +1,14 @@
 import { supabase } from "@/lib/supabase";
-export async function saveQuestions(questions: any[]) {
+export async function saveQuestions(
+  questions: any[],
+  form: any
+) {
   const payload = questions.map((q) => ({
-    subject_id: q.subject_id ?? null,
+subject_id: form.subjectIds?.[0] ?? null,
 
-    chapter_id: q.chapter_id ?? null,
+chapter_id: form.chapterIds?.[0] ?? null,
 
-    topic_id: q.topic_id ?? null,
-
+topic_id: form.topicIds?.[0] ?? null,
     question: q.question,
 
     question_type: "MCQ",
@@ -43,8 +45,21 @@ export async function saveQuestions(questions: any[]) {
 
     ai_model: "Gemini",
   }));
+  console.log("========== FORM RECEIVED ==========");
+console.dir(form, { depth: null });
+
+console.log("SubjectIds:", form.subjectIds);
+console.log("ChapterIds:", form.chapterIds);
+console.log("TopicIds:", form.topicIds);
+
+  console.log("========== QUESTION PAYLOAD ==========");
+console.dir(payload, { depth: null });
 
   console.log("========== INSERTING QUESTIONS ==========");
+console.dir(payload, { depth: null });
+console.log("========== QUESTION PAYLOAD ==========");
+console.dir(payload, { depth: null });
+console.log("========== QUESTION PAYLOAD ==========");
 console.dir(payload, { depth: null });
 
 const { data, error } = await supabase

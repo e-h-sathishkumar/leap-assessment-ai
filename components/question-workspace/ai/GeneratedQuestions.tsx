@@ -88,7 +88,7 @@ useEffect(() => {
     <div className="space-y-6">
 
       <QuestionToolbar
-        total={items.length}
+        total={items.length}  
         selected={selected.length}
         mode={mode}
         onSelectAll={selectAll}

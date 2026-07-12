@@ -1,139 +1,86 @@
-"use client";
-
-import { useMemo, useState } from "react"; 
-
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-
-
-import type { Subject } from "@/types/subject";
-import type { Chapter } from "@/types/chapter";
-import type { Topic } from "@/types/topic";
-import EntitySelect from "@/components/common/EntitySelect";
 import GeneratedQuestions from "./GeneratedQuestions";
-
-import type {
-  Difficulty,
-  BloomLevel,
-  ExamPattern,
-  PromptRequest,
-} from "@/lib/ai/types";
+import type { PromptRequest, Difficulty, ExamPattern } from "@/lib/ai/types";
+import type { CreateTestForm } from "@/types/test";
 
 interface AIQuestion {
   question: string;
-
-  options: {
-    A: string;
-    B: string;
-    C: string;
-    D: string;
-  };
-
+  options: { A: string; B: string; C: string; D: string; };
   correct_answer: string;
-
   explanation?: string;
-
   hint?: string;
-
   difficulty?: string;
-
   bloom_level?: string;
-
   learning_objective?: string;
-
   tags?: string[];
 }
 
 interface AIGeneratorFormProps {
-  subjects: Subject[];
-  chapters: Chapter[];
-  topics: Topic[];
+  form: CreateTestForm;
+  onAddToTest?: (questions: AIQuestion[]) => void;
+}
 
-  onAddToTest?: (
-    questions: AIQuestion[]
-  ) => void;
-}export default function AIGeneratorForm({
-  subjects,
-  chapters,
-  topics,
-  onAddToTest,
-}: AIGeneratorFormProps) {
-  
-  const [loading, setLoading] =
-    useState(false);
-
-  const [questions, setQuestions] =
-    useState<AIQuestion[]>([]);
-
-  const [request, setRequest] =
-    useState<PromptRequest>({
-      exam: "NEET",
-
-      subject: "",
-
-      chapter: "",
-
-      topic: "",
-
-      questionType: "MCQ",
-
-      difficulty: "Medium",
-
-      bloom: "Auto",
-
-      numberOfQuestions: 10,
-
-      language: "English",
-
-      includeExplanation: true,
-
-      includeHint: true,
-
-      includeLearningObjective: true,
-
-      includeTags: true,
-
-      avoidDuplicates: true,
-    });
+export default function AIGeneratorForm({ form, onAddToTest }: AIGeneratorFormProps) {
+  const [loading, setLoading] = useState(false);
+  const [questions, setQuestions] = useState<AIQuestion[]>([]);
 
   async function handleGenerate() {
+    // 1. Validation Checks
+    if (form.subjectNames.length === 0 || form.chapterNames.length === 0 || form.topicNames.length === 0) {
+      alert("Please ensure subjects, chapters, and topics are selected.");
+      return;
+    }
+
+    setQuestions([]);
+    setLoading(true);
+
+    const request: PromptRequest = {
+      exam: form.examType as ExamPattern,
+      subject: form.subjectNames.join(", "),
+      chapter: form.chapterNames.join(", "),
+      topic: form.topicNames.join(", "),
+      questionType: form.questionType,
+      difficulty: form.difficulty as Difficulty,
+      bloom: "Auto",
+      numberOfQuestions: form.totalQuestions,
+      language: form.language,
+      includeExplanation: true,
+      includeHint: true,
+      includeLearningObjective: true,
+      includeTags: true,
+      avoidDuplicates: true,
+    };
+
     try {
-      setLoading(true);
+      const response = await fetch("/api/ai/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(request),
+      });
 
-      const response = await fetch(
-        "/api/ai/generate",
-        {
-          method: "POST",
-
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-
-          body: JSON.stringify(request),
-        }
-      );
-
-      const data =
-        await response.json();
+      const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(
-          data.error ??
-            "Failed to generate questions."
-        );
+        throw new Error(data.error ?? "Failed to generate questions.");
       }
 
-      setQuestions(data.valid ?? []);
+      const validQuestions = data.valid ?? [];
+      console.log("========== GENERATED ==========");
+console.log(validQuestions.length);
+console.log(validQuestions);
+console.log("===============================");
+      setQuestions(validQuestions);
+
+      if (validQuestions.length === 0) {
+        alert("AI could not generate valid questions. Please try again.");
+        return;
+      }
+
+      onAddToTest?.(validQuestions);
     } catch (error) {
       console.error(error);
-
-      alert(
-        error instanceof Error
-          ? error.message
-          : "Failed to generate questions."
-      );
+      alert(error instanceof Error ? error.message : "Failed to generate questions.");
     } finally {
       setLoading(false);
     }
@@ -141,210 +88,90 @@ interface AIGeneratorFormProps {
 
   return (
     <div className="space-y-8">
-
+      {/* Configuration Summary Card */}
       <div className="rounded-xl border bg-white p-8 shadow-sm">
-
-        <div className="grid gap-6 md:grid-cols-2">
-
-          <EntitySelect
-            label="Exam"
-            value={request.exam}
-            options={[
-              {
-                id: "NEET",
-                name: "NEET",
-              },
-              {
-                id: "JEE Main",
-                name: "JEE Main",
-              },
-              {
-                id: "JEE Advanced",
-                name: "JEE Advanced",
-              },
-              {
-                id: "CBSE",
-                name: "CBSE",
-              },
-            ]}
-            optionLabel="name"
-            optionValue="id"
-            onChange={(value) =>
-              setRequest({
-                ...request,
-                exam:
-                  value as ExamPattern,
-              })
-            }
-          />
-
+        <div className="space-y-6">
           <div>
-            <Label>Subject</Label>
-
-            <Input
-              value={request.subject}
-              onChange={(e) =>
-                setRequest({
-                  ...request,
-                  subject:
-                    e.target.value,
-                })
-              }
-            />
+            <h2 className="text-2xl font-bold">AI Question Generator</h2>
+            <p className="text-slate-500 mt-1">
+              Review the assessment configuration before generating AI questions.
+            </p>
           </div>
 
-          <div>
-            <Label>Chapter</Label>
-
-            <Input
-              value={request.chapter}
-              onChange={(e) =>
-                setRequest({
-                  ...request,
-                  chapter:
-                    e.target.value,
-                })
-              }
-            />
+          <div className="grid grid-cols-2 gap-6 rounded-lg border bg-slate-50 p-6">
+            <div>
+              <p className="text-sm text-slate-500">Exam</p>
+              <p className="font-semibold">{form.examType}</p>
+            </div>
+            <div>
+              <p className="text-sm text-sm text-slate-500">Question Type</p>
+              <p className="font-semibold">{form.questionType}</p>
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">Difficulty</p>
+              <p className="font-semibold">{form.difficulty}</p>
+            </div>
+            <div>
+              <p className="text-sm text-slate-500">Questions</p>
+              <p className="font-semibold">{form.totalQuestions}</p>
+            </div>
+            <div className="col-span-2">
+              <p className="text-sm text-slate-500">Subjects</p>
+              <p className="font-semibold">
+                {form.subjectNames.length > 0 ? form.subjectNames.join(", ") : "Not Selected"}
+              </p>
+            </div>
+            <div className="col-span-2">
+              <p className="text-sm text-slate-500">Chapters</p>
+              <p className="font-semibold">
+                {form.chapterNames.length > 0 ? form.chapterNames.join(", ") : "Not Selected"}
+              </p>
+            </div>
+            <div className="col-span-2">
+              <p className="text-sm text-slate-500">Topics</p>
+              <p className="font-semibold">
+                {form.topicNames.length > 0 ? form.topicNames.join(", ") : "Not Selected"}
+              </p>
+            </div>
           </div>
 
-          <div>
-            <Label>Topic</Label>
-
-            <Input
-              value={request.topic}
-              onChange={(e) =>
-                setRequest({
-                  ...request,
-                  topic:
-                    e.target.value,
-                })
+          <div className="flex justify-end pt-4">
+            <Button
+              onClick={handleGenerate}
+              disabled={
+                loading ||
+                form.subjectNames.length === 0 ||
+                form.chapterNames.length === 0 ||
+                form.topicNames.length === 0
               }
-            />
+            >
+              {loading ? (
+                <>
+                  <span className="animate-spin mr-2">⏳</span>
+                  Generating AI Questions...
+                </>
+              ) : (
+                "✨ Generate Questions"
+              )}
+            </Button>
           </div>
-
-          <EntitySelect
-            label="Difficulty"
-            value={
-              request.difficulty
-            }
-            options={[
-              {
-                id: "Easy",
-                name: "Easy",
-              },
-              {
-                id: "Medium",
-                name: "Medium",
-              },
-              {
-                id: "Hard",
-                name: "Hard",
-              },
-              {
-                id: "Mixed",
-                name: "Mixed",
-              },
-            ]}
-            optionLabel="name"
-            optionValue="id"
-            onChange={(value) =>
-              setRequest({
-                ...request,
-                difficulty:
-                  value as Difficulty,
-              })
-            }
-          />
-
-          <EntitySelect
-            label="Bloom Level"
-            value={request.bloom}
-            options={[
-              {
-                id: "Auto",
-                name: "Auto",
-              },
-              {
-                id: "Remember",
-                name: "Remember",
-              },
-              {
-                id: "Understand",
-                name: "Understand",
-              },
-              {
-                id: "Apply",
-                name: "Apply",
-              },
-              {
-                id: "Analyze",
-                name: "Analyze",
-              },
-              {
-                id: "Evaluate",
-                name: "Evaluate",
-              },
-              {
-                id: "Create",
-                name: "Create",
-              },
-            ]}
-            optionLabel="name"
-            optionValue="id"
-            onChange={(value) =>
-              setRequest({
-                ...request,
-                bloom:
-                  value as BloomLevel,
-              })
-            }
-          />
-
-          <div>
-            <Label>
-              Number of Questions
-            </Label>
-
-            <Input
-              type="number"
-              value={
-                request.numberOfQuestions
-              }
-              onChange={(e) =>
-                setRequest({
-                  ...request,
-                  numberOfQuestions:
-                    Number(
-                      e.target.value
-                    ),
-                })
-              }
-            />
-          </div>
-
         </div>
-
-        <div className="mt-8 flex justify-end">
-
-          <Button
-            onClick={handleGenerate}
-            disabled={loading}
-          >
-            {loading
-              ? "Generating..."
-              : "✨ Generate Questions"}
-          </Button>
-
-        </div>
-
       </div>
-<GeneratedQuestions
-  questions={questions}
-  mode="assessment"
-  onAddToTest={onAddToTest}
-/>
 
+      {/* Generated Questions View */}
+      <GeneratedQuestions
+        questions={questions}
+        mode="assessment"
+        onAddToTest={onAddToTest}
+      />
+
+      {questions.length > 0 && (
+        <div className="rounded-lg border bg-green-50 p-4 border-green-200">
+          <p className="font-medium text-green-700">
+            ✅ {questions.length} AI questions generated successfully.
+          </p>
+        </div>
+      )}
     </div>
   );
 }

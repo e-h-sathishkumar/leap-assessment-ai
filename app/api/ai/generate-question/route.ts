@@ -5,111 +5,94 @@ const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY!,
 });
 
-const sleep = (ms: number) =>
-  new Promise((resolve) => setTimeout(resolve, ms));
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export async function POST(req: Request) {
   try {
-    const {
-      exam,
-      subject,
-      chapter,
-      topic,
-      questionType,
-      totalQuestions,
-    } = await req.json();
+    const { exam, subject, chapter, topic, questionType, totalQuestions } = await req.json();
 
+    // 1. Defined schema matches your Frontend AIQuestion interface
     const prompt = `
-Generate ${totalQuestions} ${questionType} question(s) for ${exam}.
+Generate ${totalQuestions} ${questionType} questions for ${exam}.
 
 Subject: ${subject}
 Chapter: ${chapter}
 Topic: ${topic}
 
-For each question return ONLY valid JSON.
-
+Return ONLY valid JSON.
 Schema:
-
 {
-  "questions":[
+  "questions": [
     {
-      "question":"...",
-      "questionType":"${questionType}",
-      "difficulty":"Easy",
-      "category":"Conceptual",
-      "options":[
-        "...",
-        "...",
-        "...",
-        "..."
-      ],
-      "correctAnswer":"A",
-      "explanation":"..."
+      "question": "...",
+      "questionType": "${questionType}",
+      "difficulty": "Medium",
+      "options": {
+        "A": "...",
+        "B": "...",
+        "C": "...",
+        "D": "..."
+      },
+      "correct_answer": "A",
+      "explanation": "..."
     }
   ]
 }
-
-No markdown.
-No code block.
-JSON only.
 `;
 
     let lastError: any = null;
 
+    // Retry loop for API stability
     for (let attempt = 1; attempt <= 3; attempt++) {
       try {
         const response = await ai.models.generateContent({
           model: "gemini-2.5-flash",
           contents: prompt,
+          config: {
+            // This forces Gemini to output pure JSON
+            responseMimeType: "application/json",
+          },
         });
 
-        let text = response.text ?? "";
+        const text = response.text ?? "{}";
 
-        text = text
-          .replace(/```json/g, "")
-          .replace(/```/g, "")
-          .trim();
+        // 2. Fail-Safe Extraction: Use Regex to find the JSON object 
+        // even if the AI adds filler text before or after the JSON.
+        const jsonMatch = text.match(/\{[\s\S]*\}/);
+        const jsonString = jsonMatch ? jsonMatch[0] : text;
 
-        return NextResponse.json(JSON.parse(text));
+        const data = JSON.parse(jsonString);
+
+        // 3. Return the data
+        return NextResponse.json(data);
+
       } catch (err: any) {
         lastError = err;
+        console.error(`Attempt ${attempt} failed:`, err.message);
 
-        const msg = err?.message ?? "";
-
+        // Retry only on network/rate-limit errors
         if (
-          msg.includes("503") ||
-          msg.includes("UNAVAILABLE") ||
-          msg.includes("high demand")
+          err?.message?.includes("503") ||
+          err?.message?.includes("UNAVAILABLE") ||
+          err?.message?.includes("high demand") ||
+          err instanceof SyntaxError // Retry if JSON parsing failed
         ) {
-          console.log(`Retry ${attempt}/3...`);
           await sleep(2000);
           continue;
         }
-
         throw err;
       }
     }
 
     return NextResponse.json(
-      {
-        error:
-          "Gemini is temporarily unavailable. Please try again shortly.",
-        details: lastError?.message,
-      },
-      {
-        status: 503,
-      }
+      { error: "Gemini is unavailable. Please try again.", details: lastError?.message },
+      { status: 503 }
     );
   } catch (error: any) {
-    console.error(error);
-
+    console.error("Critical API Error:", error);
     return NextResponse.json(
-      {
-        error: error.message ?? "Unknown error",
-      },
-      {
-        status: 500,
-      }
+      { error: error.message ?? "Unknown error" },
+      { status: 500 }
     );
   }
 }

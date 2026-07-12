@@ -104,7 +104,17 @@ export async function createTestWithQuestions(
 ) {
 
   console.log("========== FORM ==========");
-  console.dir(form, { depth: null });
+  console.dir(form, { depth: null }); 
+  console.log("======================================");
+
+  console.log("subjectId =", form.subjectId);
+console.log("subjectIds =", form.subjectIds);
+
+console.log("chapterId =", form.chapterId);
+console.log("chapterIds =", form.chapterIds);
+
+console.log("topicId =", form.topicId);
+console.log("topicIds =", form.topicIds);
 
   console.log("========== QUESTIONS ==========");
   console.log(questions.length);
@@ -113,12 +123,11 @@ export async function createTestWithQuestions(
     title: form.title,
 
     exam: form.examType,
+subject_id: form.subjectIds[0] ?? null,
 
-    subject_id: form.subjectId,
+chapter_id: form.chapterIds[0] ?? null,
 
-    chapter_id: form.chapterId,
-
-    topic_id: form.topicId,
+topic_id: form.topicIds[0] ?? null,
 
     description: form.description,
 
@@ -166,16 +175,44 @@ console.dir(test, { depth: null });
 
 // Save AI generated questions
 console.log("===== SAVING QUESTIONS =====");
+console.log("===== STEP 2 : CALLING saveQuestions =====");
+console.log("Questions Received:", questions.length);
+console.dir(questions, { depth: null });
+console.log("========== FORM ==========");
+console.dir(form, { depth: null });
 
-const savedQuestions = await saveQuestions(questions);
+console.log("Subject IDs:", form.subjectIds);
+console.log("Chapter IDs:", form.chapterIds);
+console.log("Topic IDs:", form.topicIds);
+console.log("========== FORM ==========");
+console.dir(form, { depth: null });
 
+console.log("Subject IDs:", form.subjectIds);
+console.log("Chapter IDs:", form.chapterIds);
+console.log("Topic IDs:", form.topicIds);
+console.log("========== FORM ==========");
+console.dir(form, { depth: null }); 
+const savedQuestions =
+  await saveQuestions(
+    questions,
+    form
+  );
+console.log("========== SAVED QUESTIONS ==========");
+console.dir(savedQuestions, { depth: null });
+
+console.log("===== STEP 3 : saveQuestions Returned =====");
+console.dir(savedQuestions, { depth: null });
 console.log("QUESTIONS SAVED");
 console.dir(savedQuestions, { depth: null });
 
 // Link questions to this test
 console.log("===== LINKING QUESTIONS =====");
+console.log("===== LINKING QUESTIONS =====");
 
 await addQuestionsToTest(
+  test.id,
+  savedQuestions
+);await addQuestionsToTest(
   test.id,
   savedQuestions
 );
@@ -202,12 +239,18 @@ export async function addQuestionsToTest(
     marks: question.marks,
     negative_marks: question.negative_marks,
   }));
-
+console.log("========== TEST QUESTION ROWS ==========");
+console.dir(rows, { depth: null });
   const { error } = await supabase
     .from("test_questions")
     .insert(rows);
 
-  if (error) throw error;
+  if (error) {
+  console.error("========== LINK ERROR ==========");
+  console.dir(error, { depth: null });
+
+  throw error;
+}
 
   return true;
 }

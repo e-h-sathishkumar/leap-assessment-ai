@@ -15,6 +15,11 @@ export default function ReviewTest({
   questions,
   form,
 }: ReviewTestProps) {
+  console.log("========== REVIEW ==========");
+console.log(questions.length);
+console.log(questions);
+console.log("============================");
+
   const [saving, setSaving] = useState(false);
 
   async function handleCreateTest() {
@@ -26,7 +31,7 @@ export default function ReviewTest({
     try {
       setSaving(true);
 
-      
+      console.log("===== SAVE TEST CLICKED =====");
       await createTestWithQuestions(
   form,
   questions
@@ -44,8 +49,9 @@ alert("✅ Draft Saved Successfully");
   );
 }
 
-  return (
-    <div className="space-y-6">
+} // <-- ADD THIS
+
+return (   <div className="space-y-6">
 
       <div className="rounded-xl border bg-white p-8 shadow-sm">
 
@@ -194,5 +200,4 @@ alert("✅ Draft Saved Successfully");
 
     </div>
   );
-}
 }

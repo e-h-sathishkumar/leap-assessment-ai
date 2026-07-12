@@ -57,18 +57,48 @@ export interface TestWithSubject extends Test {
   };
 }
 
-// ====================================================
+// =========================// ====================================================
 // Create Test Form
 // ====================================================
 
 export interface CreateTestForm {
+  // ------------------------------------------
+  // Basic Information
+  // ------------------------------------------
+
   title: string;
 
   examType: string;
 
+  testType: string;
+
   academicYear: string;
 
   classLevel: string;
+
+  language: string;
+
+  description: string;
+
+  // ------------------------------------------
+  // Academic Selection (New)
+  // ------------------------------------------
+
+  subjectIds: number[];
+
+  chapterIds: number[];
+
+  topicIds: number[];
+  subjectNames: string[];
+
+chapterNames: string[];
+
+topicNames: string[];
+
+  // ------------------------------------------
+  // Backward Compatibility
+  // (Will be removed after migration)
+  // ------------------------------------------
 
   subjectId: number | null;
 
@@ -76,15 +106,19 @@ export interface CreateTestForm {
 
   topicId: number | null;
 
-  language: string;
+  // ------------------------------------------
+  // Question Configuration
+  // ------------------------------------------
+questionType: string;
+  questionTypes: string[];
+
+  difficultyLevels: string[];
 
   difficulty: string;
 
-  description: string;
+  totalQuestions: number;
 
   duration: number;
-
-  totalQuestions: number;
 
   maximumMarks: number;
 
@@ -96,7 +130,9 @@ export interface CreateTestForm {
 
   negativeMarks: number;
 
-  testType: string;
+  // ------------------------------------------
+  // Status
+  // ------------------------------------------
 
   status: "Draft" | "Published";
 

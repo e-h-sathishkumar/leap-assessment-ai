@@ -19,27 +19,15 @@ import WizardNavigation from "./WizardNavigation";
 import BasicDetails from "./steps/BasicDetails";
 //import TestPattern from "./steps/TestPattern";
 import ReviewTest from "./steps/ReviewTest";
-
-import AIBuilder from "@/components/assessment/ai-builder/AIBuilder";
+import AIGenerator from "@/components/question-workspace/ai/AIGenerator";
 
 import { TOTAL_TEST_WIZARD_STEPS } from "@/utils/test-wizard";
 
 import type { CreateTestForm } from "@/types/test";
-import type { Subject } from "@/types/subject";
-import type { Chapter } from "@/types/chapter";
-import type { Topic } from "@/types/topic";
 
-interface CreateTestWizardProps {
-  subjects: Subject[];
-  chapters: Chapter[];
-  topics: Topic[];
-}
 
-export default function CreateTestWizard({
-  subjects,
-  chapters,
-  topics,
-}: CreateTestWizardProps) {
+interface CreateTestWizardProps {}
+export default function CreateTestWizard()  {
   //--------------------------------------------------
   // Wizard State
   //--------------------------------------------------
@@ -57,64 +45,87 @@ export default function CreateTestWizard({
   //--------------------------------------------------
   // Form
   //--------------------------------------------------
+const [form, setForm] =
+useState<CreateTestForm>({
 
- const [form, setForm] =
-  useState<CreateTestForm>({
+  // ------------------------------------------------
+  // Basic Information
+  // ------------------------------------------------
 
-    // ======================================
-    // Basic Details
-    // ======================================
+  title: "",
 
-    title: "",
+  examType: "NEET",
 
-    testType: "Practice",
+  testType: "Practice",
 
-    examType: "",
+  academicYear: "2026-2027",
 
-    academicYear: "",
+  classLevel: "XI",
 
-    classLevel: "",
+  language: "English",
 
-    subjectId: null,
+  description: "",
 
-    chapterId: null,
+  // ------------------------------------------------
+  // Academic Selection
+  // ------------------------------------------------
 
-    topicId: null,
+ subjectIds: [],
+subjectNames: [],
 
-    language: "English",
+chapterIds: [],
+chapterNames: [],
 
-    difficulty: "Medium",
+topicIds: [],
+topicNames: [],
 
-    description: "",
+  // Temporary compatibility
+  subjectId: null,
 
-    // ======================================
-    // Test Settings
-    // ======================================
+  chapterId: null,
 
-    duration: 180,
+  topicId: null,
 
-    totalQuestions: 180,
+  // ------------------------------------------------
+  // Question Configuration
+  // ------------------------------------------------
+// ------------------------------------------------
+// Question Configuration
+// ------------------------------------------------
 
-    maximumMarks: 720,
+questionType: "MCQ",
 
-    passingMarks: 120,
+questionTypes: ["MCQ"],
 
-    marksPerQuestion: 4,
+difficultyLevels: ["Medium"],
 
-    negativeMarking: true,
 
-    negativeMarks: 1,
+  difficulty: "Medium",
 
-    // ======================================
-    // Status
-    // ======================================
+  totalQuestions: 2,
 
-    status: "Draft",
+  duration: 180,
 
-    isActive: true,
-  });
+  maximumMarks: 720,
 
-  //--------------------------------------------------
+  passingMarks: 120,
+
+  marksPerQuestion: 4,
+
+  negativeMarking: true,
+
+  negativeMarks: 1,
+
+  // ------------------------------------------------
+  // Status
+  // ------------------------------------------------
+
+  status: "Draft",
+
+  isActive: true,
+});
+
+//--------------------------------------------------
   // Navigation
   //--------------------------------------------------
 
@@ -218,13 +229,9 @@ function handleQuestionsSelected(
       {/* STEP 2 */}
       {/* ------------------------------------ */}
 {currentStep === 1 && (
-  <AIBuilder
-    subjects={subjects}
-    chapters={chapters}
-    topics={topics}
-    onQuestionsSelected={
-      handleQuestionsSelected
-    }
+  <AIGenerator
+    form={form}
+    onAddToTest={handleQuestionsSelected}
   />
 )}
      {/* ------------------------------------ */}

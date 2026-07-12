@@ -1,11 +1,14 @@
 export function parseAIResponse(response: string) {
   try {
-    const cleaned = response
+    console.log("========== RAW AI RESPONSE ==========");
+    console.log(response);
+    console.log("=====================================");
+
+    let cleaned = response
       .replace(/```json/gi, "")
       .replace(/```/g, "")
       .trim();
 
-    // Extract the first JSON object if extra text exists
     const start = cleaned.indexOf("{");
     const end = cleaned.lastIndexOf("}");
 
@@ -13,12 +16,20 @@ export function parseAIResponse(response: string) {
       throw new Error("No JSON object found.");
     }
 
-    const jsonText = cleaned.substring(start, end + 1);
+    cleaned = cleaned.substring(start, end + 1);
 
-    return JSON.parse(jsonText);
+    console.log("========== CLEANED JSON ==========");
+    console.log(cleaned);
+    console.log("==================================");
+
+    return JSON.parse(cleaned);
+
   } catch (error) {
-    console.error("Failed to parse AI response:");
+
+    console.error("========== PARSE ERROR ==========");
     console.error(response);
+    console.error("=================================");
+
     throw new Error("Invalid AI JSON response.");
   }
 }
