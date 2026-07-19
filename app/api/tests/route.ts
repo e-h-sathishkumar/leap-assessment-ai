@@ -1,7 +1,13 @@
 import { NextResponse } from "next/server";
 
-import { createTestWithQuestions } from "@/services/test.service";
+import {
+  createTestWithQuestions,
+  deleteTest,
+} from "@/services/test.service";
 
+// ----------------------------
+// Create Test
+// ----------------------------
 export async function POST(request: Request) {
   try {
     const body = await request.json();
@@ -16,20 +22,52 @@ export async function POST(request: Request) {
       test,
     });
   } catch (error) {
-  console.error("========== API ERROR ==========");
-  console.error(error);
+    console.error("========== CREATE TEST ERROR ==========");
+    console.error(error);
 
-  return NextResponse.json(
-    {
-      success: false,
-      error:
-        error instanceof Error
-          ? error.message
-          : JSON.stringify(error),
-    },
-    {
-      status: 500,
-    }
-  );
+    return NextResponse.json(
+      {
+        success: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to create test.",
+      },
+      {
+        status: 500,
+      }
+    );
+  }
 }
+
+// ----------------------------
+// Delete Test
+// ----------------------------
+export async function DELETE(request: Request) {
+  try {
+    const { testId } = await request.json();
+
+    await deleteTest(Number(testId));
+
+    return NextResponse.json({
+      success: true,
+      message: "Test deleted successfully.",
+    });
+  } catch (error) {
+    console.error("========== DELETE TEST ERROR ==========");
+    console.error(error);
+
+    return NextResponse.json(
+      {
+        success: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : "Failed to delete test.",
+      },
+      {
+        status: 500,
+      }
+    );
+  }
 }

@@ -69,3 +69,37 @@ export async function deleteTopic(
 
   if (error) throw error;
 }
+// -----------------------------------------------------
+// Get Saved Questions
+// -----------------------------------------------------
+
+export async function getSavedQuestions(
+  subjectId?: number,
+  chapterId?: number,
+  topicId?: number
+) {
+  let query = supabase
+    .from("questions")
+    .select("*")
+    .order("id", {
+      ascending: false,
+    });
+
+  if (subjectId) {
+    query = query.eq("subject_id", subjectId);
+  }
+
+  if (chapterId) {
+    query = query.eq("chapter_id", chapterId);
+  }
+
+  if (topicId) {
+    query = query.eq("topic_id", topicId);
+  }
+
+  const { data, error } = await query;
+
+  if (error) throw error;
+
+  return data ?? [];
+}

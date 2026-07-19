@@ -51,8 +51,11 @@ export interface QuestionOption {
   is_correct: boolean;
 }
 
-export interface Question {
+// ====================================================
+// Database Question Model
+// ====================================================
 
+export interface Question {
   id?: number;
 
   subject_id: number;
@@ -110,4 +113,49 @@ export interface Question {
   created_at?: string;
 
   updated_at?: string;
+}
+
+// ====================================================
+// AI Generated Question (Before Saving)
+// Used in Review Screen
+// ====================================================
+
+export interface AIQuestion {
+  id?: number;
+
+  question: string;
+
+  options: {
+    A: string;
+    B: string;
+    C: string;
+    D: string;
+    E?: string;
+  };
+
+  correct_answer: string;
+
+  explanation: string;
+
+  hint?: string;
+
+  learning_objective?: string;
+
+  difficulty: Difficulty;
+
+  marks: number;
+
+  negative_marks: number;
+
+  source_type: "AI";
+
+  generated_by?: string;
+
+  ai_model?: string;
+
+  isSelected: boolean;
+
+  isEditing: boolean;
+
+  isDeleted: boolean;
 }

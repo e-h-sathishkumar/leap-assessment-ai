@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import EditQuestionDialog from "./EditQuestionDialog";
 
 export interface AIQuestion {
+  id?: number;
+
   question: string;
 
   options: {
@@ -18,11 +20,32 @@ export interface AIQuestion {
   correct_answer: string;
 
   explanation?: string;
+
   hint?: string;
+
   difficulty?: string;
+
   bloom_level?: string;
+
   learning_objective?: string;
+
   tags?: string[];
+
+  marks?: number;
+
+  negative_marks?: number;
+
+  isSelected?: boolean;
+
+  isEditing?: boolean;
+
+  isDeleted?: boolean;
+
+  source_type?: "AI";
+
+  generated_by?: string;
+
+  ai_model?: string;
 }
 
 interface QuestionCardProps {

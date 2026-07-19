@@ -37,7 +37,7 @@ topic_id: form.topicIds?.[0] ?? null,
 
     learning_objective: q.learning_objective ?? null,
 
-    status: "Draft",
+    status: "Approved",
 
     source_type: "AI",
 

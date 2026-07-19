@@ -1,7 +1,11 @@
 "use client";
+
 import { useState } from "react";
 
-import type { AIQuestion } from "@/components/question-workspace/ai/QuestionCard";
+import QuestionCard, {
+  AIQuestion,
+} from "@/components/question-workspace/ai/QuestionCard";
+
 import {
   createTestWithQuestions,
 } from "@/services/test.service";
@@ -15,43 +19,66 @@ export default function ReviewTest({
   questions,
   form,
 }: ReviewTestProps) {
-  console.log("========== REVIEW ==========");
-console.log(questions.length);
-console.log(questions);
-console.log("============================");
 
-  const [saving, setSaving] = useState(false);
+  const [reviewQuestions, setReviewQuestions] =
+    useState<AIQuestion[]>(questions);
+
+  const [saving, setSaving] =
+    useState(false);
+
+  const totalMarks =
+    reviewQuestions.reduce(
+      (sum, q) => sum + (q.marks ?? 4),
+      0
+    );
+
+  const totalNegative =
+    reviewQuestions.reduce(
+      (sum, q) => sum + (q.negative_marks ?? 1),
+      0
+    );
 
   async function handleCreateTest() {
-    if (questions.length === 0) {
+
+    if (reviewQuestions.length === 0) {
+
       alert("No questions selected.");
+
       return;
+
     }
 
     try {
+
       setSaving(true);
 
-      console.log("===== SAVE TEST CLICKED =====");
       await createTestWithQuestions(
-  form,
-  questions
-);
+        form,
+        reviewQuestions
+      );
 
-alert("✅ Draft Saved Successfully");
+      alert("✅ Test Created Successfully");
+
     } catch (error: any) {
-  console.error("========== CREATE TEST ERROR ==========");
-  console.dir(error, { depth: null });
 
-  alert(
-    error?.message ??
-    JSON.stringify(error) ??
-    "Unable to create Test."
-  );
-}
+      console.error(error);
 
-} // <-- ADD THIS
+      alert(
+        error?.message ??
+          "Unable to create test."
+      );
 
-return (   <div className="space-y-6">
+    } finally {
+
+      setSaving(false);
+
+    }
+
+  }
+
+  return (
+
+    <div className="space-y-6">
 
       <div className="rounded-xl border bg-white p-8 shadow-sm">
 
@@ -60,144 +87,153 @@ return (   <div className="space-y-6">
         </h2>
 
         <p className="mt-2 text-slate-500">
-          Review the test details before creating and publishing.
+          Review AI-generated questions before creating the test.
         </p>
 
       </div>
 
       <div className="rounded-xl border bg-white p-6">
 
-        <h3 className="text-lg font-semibold">
-          Total Questions
-        </h3>
-
-        <p className="mt-2 text-4xl font-bold text-blue-600">
-          {questions.length}
-        </p>
-
-      </div>
-
-      <div className="rounded-xl border bg-white p-6">
-
-        <h3 className="mb-4 text-lg font-semibold">
-          Test Summary
-        </h3>
-
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
 
           <div>
+
             <p className="text-sm text-slate-500">
               Questions
             </p>
 
-            <p className="text-xl font-bold">
-              {questions.length}
+            <p className="text-2xl font-bold">
+              {reviewQuestions.length}
             </p>
+
           </div>
 
           <div>
+
             <p className="text-sm text-slate-500">
               Total Marks
             </p>
 
-            <p className="text-xl font-bold">
-              {questions.reduce(
-                (sum: number, q: any) =>
-                  sum + (q.marks ?? 0),
-                0
-              )}
+            <p className="text-2xl font-bold">
+              {totalMarks}
             </p>
+
           </div>
 
           <div>
+
             <p className="text-sm text-slate-500">
-              Negative Marks
+              Negative
             </p>
 
-            <p className="text-xl font-bold">
-              {questions.reduce(
-                (sum: number, q: any) =>
-                  sum + (q.negative_marks ?? 0),
-                0
-              )}
+            <p className="text-2xl font-bold">
+              {totalNegative}
             </p>
+
           </div>
 
           <div>
+
             <p className="text-sm text-slate-500">
-              Estimated Time
+              Time
             </p>
 
-            <p className="text-xl font-bold">
-              {questions.length} Minutes
+            <p className="text-2xl font-bold">
+              {reviewQuestions.length} Min
             </p>
+
           </div>
 
         </div>
 
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-5">
 
-        {questions.map((q: any, index: number) => (
+        {reviewQuestions.map(
+          (question, index) => (
 
-          <div
-            key={index}
-            className="rounded-xl border bg-white p-5"
-          >
+            <QuestionCard
 
-            <div className="flex items-center justify-between">
+              key={question.id ?? index}
 
-              <h4 className="font-semibold">
-                Question {index + 1}
-              </h4>
+              index={index + 1}
 
-              <span className="rounded-full bg-green-100 px-3 py-1 text-xs text-green-700">
-                {q.difficulty}
-              </span>
+              question={question}
 
-            </div>
+              onUpdate={(updated) =>
 
-            <p className="mt-4">
-              {q.question}
-            </p>
+                setReviewQuestions((prev) =>
 
-            <div className="mt-5 grid gap-2">
+                  prev.map((q, i) =>
 
-              <div>A. {q.options?.A}</div>
-              <div>B. {q.options?.B}</div>
-              <div>C. {q.options?.C}</div>
-              <div>D. {q.options?.D}</div>
+                    i === index
+                      ? updated
+                      : q
 
-            </div>
+                  )
 
-            <div className="mt-5 rounded-lg bg-green-50 p-4">
+                )
 
-              <strong>Answer:</strong>{" "}
-              {q.correct_answer}
+              }
 
-            </div>
+            onDuplicate={() =>
+  setReviewQuestions((prev) => {
+    const copy = [...prev];
 
-          </div>
+    copy.splice(index + 1, 0, {
+      ...question,
+      id: undefined,
+    });
 
-        ))}
+    return copy;
+  })
+}
+              onDelete={() =>
+
+                setReviewQuestions((prev) =>
+
+                  prev.filter(
+                    (_, i) =>
+                      i !== index
+                  )
+
+                )
+
+              }
+
+            />
+
+          )
+
+        )}
 
       </div>
 
       <div className="flex justify-end">
 
         <button
+
           onClick={handleCreateTest}
+
           disabled={saving}
+
           className="rounded-lg bg-blue-600 px-8 py-3 text-white hover:bg-blue-700 disabled:opacity-50"
+
         >
+
           {saving
-            ? "Saving Test..."
-            : "Save Test"}
+
+            ? "Creating Test..."
+
+            : "💾 Save & Create Test"}
+
         </button>
 
       </div>
 
     </div>
+
   );
+
 }

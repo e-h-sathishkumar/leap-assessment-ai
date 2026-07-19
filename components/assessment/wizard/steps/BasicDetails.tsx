@@ -122,51 +122,187 @@ export default function BasicDetails({ form, setForm }: BasicDetailsProps) {
   };
 
   return (
-    <div className="rounded-xl border bg-white p-8 shadow-sm">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Subjects */}
-        <div className="space-y-2">
-          <Label>Subjects *</Label>
-          <div className="h-64 overflow-y-auto rounded-md border p-4 space-y-2">
-            {subjects.map((s) => (
-              <label key={s.id} className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" checked={form.subjectIds.includes(s.id)} onChange={(e) => handleSubjectChange(s, e.target.checked)} />
-                {s.name}
-              </label>
-            ))}
-          </div>
-        </div>
+  <div className="rounded-xl border bg-white p-8 shadow-sm">
 
-        {/* Chapters */}
-        <div className="space-y-2">
-          <Label>Chapters</Label>
-          <div className="h-64 overflow-y-auto rounded-md border p-4 space-y-2">
-            {loadingChapters && <p className="text-xs text-slate-500">Loading chapters...</p>}
-            {!loadingChapters && chapters.length === 0 && <p className="text-sm text-slate-400">Select subject(s) to load chapters.</p>}
-            {chapters.map((c) => (
-              <label key={c.id} className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" checked={form.chapterIds.includes(c.id)} onChange={(e) => handleChapterChange(c, e.target.checked)} />
-                {c.name}
-              </label>
-            ))}
-          </div>
-        </div>
+    {/* Basic Information */}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
 
-        {/* Topics */}
-        <div className="space-y-2">
-          <Label>Topics</Label>
-          <div className="h-64 overflow-y-auto rounded-md border p-4 space-y-2">
-            {loadingTopics && <p className="text-xs text-slate-500">Loading topics...</p>}
-            {!loadingTopics && topics.length === 0 && <p className="text-sm text-slate-400">Select chapter(s) to load topics.</p>}
-            {topics.map((t) => (
-              <label key={t.id} className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" checked={form.topicIds.includes(t.id)} onChange={(e) => handleTopicChange(t, e.target.checked)} />
-                {t.name}
-              </label>
-            ))}
-          </div>
-        </div>
+     <FormInput
+  label="Test Title"
+  value={form.title}
+  placeholder="Enter Test Title"
+  onChange={(value) =>
+    setForm({
+      ...form,
+      title: value,
+    })
+  }
+/>
+
+      <div>
+        <Label>Exam Type</Label>
+        <Input
+          value={form.examType}
+          onChange={(e) =>
+            setForm({
+              ...form,
+              examType: e.target.value,
+            })
+          }
+        />
       </div>
+
     </div>
-  );
-}
+
+    <div className="mb-8">
+      <Label>Description</Label>
+
+      <Textarea
+        value={form.description}
+        onChange={(e) =>
+          setForm({
+            ...form,
+            description: e.target.value,
+          })
+        }
+      />
+    </div>
+
+    {/* Academic Selection */}
+
+<div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+
+  {/* Subjects */}
+
+  <div className="rounded-lg border p-4">
+
+    <h3 className="mb-4 text-lg font-semibold">
+      Subjects
+    </h3>
+
+    <div className="space-y-2">
+
+      {subjects.map((subject) => (
+
+        <label
+          key={subject.id}
+          className="flex items-center gap-3"
+        >
+
+          <input
+            type="checkbox"
+            checked={form.subjectIds.includes(subject.id)}
+            onChange={(e) =>
+              handleSubjectChange(
+                subject,
+                e.target.checked
+              )
+            }
+          />
+
+          <span>{subject.name}</span>
+
+        </label>
+
+      ))}
+
+    </div>
+
+  </div>
+
+  {/* Chapters */}
+
+  <div className="rounded-lg border p-4">
+
+    <h3 className="mb-4 text-lg font-semibold">
+      Chapters
+    </h3>
+
+    {loadingChapters ? (
+
+      <p>Loading...</p>
+
+    ) : (
+
+      <div className="space-y-2">
+
+        {chapters.map((chapter) => (
+
+          <label
+            key={chapter.id}
+            className="flex items-center gap-3"
+          >
+
+            <input
+              type="checkbox"
+              checked={form.chapterIds.includes(chapter.id)}
+              onChange={(e) =>
+                handleChapterChange(
+                  chapter,
+                  e.target.checked
+                )
+              }
+            />
+
+            <span>{chapter.name}</span>
+
+          </label>
+
+        ))}
+
+      </div>
+
+    )}
+
+  </div>
+
+  {/* Topics */}
+
+  <div className="rounded-lg border p-4">
+
+    <h3 className="mb-4 text-lg font-semibold">
+      Topics
+    </h3>
+
+    {loadingTopics ? (
+
+      <p>Loading...</p>
+
+    ) : (
+
+      <div className="space-y-2">
+
+        {topics.map((topic) => (
+
+          <label
+            key={topic.id}
+            className="flex items-center gap-3"
+          >
+
+            <input
+              type="checkbox"
+              checked={form.topicIds.includes(topic.id)}
+              onChange={(e) =>
+                handleTopicChange(
+                  topic,
+                  e.target.checked
+                )
+              }
+            />
+
+            <span>{topic.name}</span>
+
+          </label>
+
+        ))}
+
+      </div>
+
+    )}
+
+  </div>
+
+</div>
+  </div>
+);
+} 
