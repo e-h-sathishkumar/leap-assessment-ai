@@ -26,20 +26,30 @@ export default function ChapterTable({
 }: ChapterTableProps) {
   if (chapters.length === 0) {
     return (
-      <div className="rounded-lg border p-6 text-center text-slate-500">
+      <div className="rounded-xl border border-slate-200 bg-white p-8 text-center text-slate-500">
         No chapters found.
       </div>
     );
   }
 
   return (
-    <div className="rounded-lg border bg-white shadow-sm">
+    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
       <Table>
+
         <TableHeader>
           <TableRow>
-            <TableHead>Subject</TableHead>
-            <TableHead>Chapter</TableHead>
-            <TableHead>Status</TableHead>
+            <TableHead>
+              Subject
+            </TableHead>
+
+            <TableHead>
+              Chapter
+            </TableHead>
+
+            <TableHead>
+              Status
+            </TableHead>
+
             <TableHead className="text-right">
               Actions
             </TableHead>
@@ -47,45 +57,74 @@ export default function ChapterTable({
         </TableHeader>
 
         <TableBody>
-          {chapters.map((chapter) => (
-            <TableRow key={chapter.id}>
-              <TableCell>
-                {chapter.subjects?.name}
-              </TableCell>
+          {chapters.map(
+            (chapter) => {
+              const subject =
+                subjects.find(
+                  (item) =>
+                    item.id ===
+                    chapter.subject_id
+                );
 
-              <TableCell className="font-medium">
-                {chapter.name}
-              </TableCell>
-
-              <TableCell>
-                <Badge
-                  variant={
-                    chapter.is_active
-                      ? "default"
-                      : "secondary"
-                  }
+              return (
+                <TableRow
+                  key={chapter.id}
                 >
-                  {chapter.is_active
-                    ? "Active"
-                    : "Inactive"}
-                </Badge>
-              </TableCell>
 
-              <TableCell className="text-right">
-                <div className="flex justify-end gap-2">
-                  <EditChapterDialog
-                    chapter={chapter}
-                    subjects={subjects}
-                  />
+                  {/* SUBJECT */}
 
-                  <DeleteChapterDialog
-                    chapter={chapter}
-                  />
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
+                  <TableCell>
+                    {subject?.name ??
+                      "Unknown Subject"}
+                  </TableCell>
+
+                  {/* CHAPTER */}
+
+                  <TableCell className="font-medium">
+                    {chapter.name}
+                  </TableCell>
+
+                  {/* STATUS */}
+
+                  <TableCell>
+                    <Badge
+                      variant={
+                        chapter.is_active
+                          ? "default"
+                          : "secondary"
+                      }
+                    >
+                      {chapter.is_active
+                        ? "Active"
+                        : "Inactive"}
+                    </Badge>
+                  </TableCell>
+
+                  {/* ACTIONS */}
+
+                  <TableCell className="text-right">
+
+                    <div className="flex justify-end gap-2">
+
+                      <EditChapterDialog
+                        chapter={chapter}
+                        subjects={subjects}
+                      />
+
+                      <DeleteChapterDialog
+                        chapter={chapter}
+                      />
+
+                    </div>
+
+                  </TableCell>
+
+                </TableRow>
+              );
+            }
+          )}
         </TableBody>
+
       </Table>
     </div>
   );

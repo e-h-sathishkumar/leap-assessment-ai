@@ -3,9 +3,9 @@
 import { useMemo, useState } from "react";
 
 import {
-  createTopicAction,
-  updateTopicAction,
-} from "@/app/repository/topics/actions";
+  createTopic,
+  updateTopic,
+} from "@/services/topic.service";
 
 import type { Topic } from "@/types/topic";
 import type { Subject } from "@/types/subject";
@@ -37,9 +37,14 @@ export default function TopicForm({
 }: TopicFormProps) {
   const [loading, setLoading] = useState(false);
 
+  // ==========================================================
+  // INITIAL SUBJECT / CHAPTER
+  // ==========================================================
+
   const initialSubjectId =
     chapters.find(
-      (chapter) => chapter.id === topic?.chapter_id
+      (chapter) =>
+        chapter.id === topic?.chapter_id
     )?.subject_id ?? 0;
 
   const [subjectId, setSubjectId] = useState(
@@ -50,43 +55,122 @@ export default function TopicForm({
     topic?.chapter_id?.toString() ?? ""
   );
 
+  // ==========================================================
+  // FILTER CHAPTERS BY SUBJECT
+  // ==========================================================
+
   const filteredChapters = useMemo(() => {
+    if (!subjectId) {
+      return [];
+    }
+
     return chapters.filter(
       (chapter) =>
-        chapter.subject_id === Number(subjectId)
+        chapter.subject_id ===
+        Number(subjectId)
     );
   }, [chapters, subjectId]);
 
+  // ==========================================================
+  // SUBMIT
+  // ==========================================================
+
   async function handleSubmit(
-    formData: FormData
+    event: React.FormEvent<HTMLFormElement>
   ) {
-    setLoading(true);
+    event.preventDefault();
 
-    const result =
-      mode === "create"
-        ? await createTopicAction(formData)
-        : await updateTopicAction(
-            topic!.id!,
-            formData
-          );
-
-    setLoading(false);
-
-    if (!result.success) {
-      toast.error(result.message);
+    if (!chapterId) {
+      toast.error(
+        "Please select a chapter."
+      );
       return;
     }
 
-    toast.success(result.message);
+    const formData = new FormData(
+      event.currentTarget
+    );
 
-    onSuccess?.();
+    const name = String(
+      formData.get("name") ?? ""
+    ).trim();
+
+    const description = String(
+      formData.get("description") ?? ""
+    ).trim();
+
+    if (!name) {
+      toast.error(
+        "Topic name is required."
+      );
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      if (mode === "create") {
+        await createTopic({
+          name,
+          chapter_id: Number(chapterId),
+          description,
+        } as Topic);
+
+        toast.success(
+          "Topic created successfully."
+        );
+      } else {
+        if (!topic?.id) {
+          toast.error(
+            "Invalid topic."
+          );
+          return;
+        }
+
+        await updateTopic(
+          topic.id,
+          {
+            name,
+            chapter_id: Number(
+              chapterId
+            ),
+            description,
+          }
+        );
+
+        toast.success(
+          "Topic updated successfully."
+        );
+      }
+
+      onSuccess?.();
+    } catch (error) {
+      console.error(
+        "TOPIC SAVE ERROR:",
+        error
+      );
+
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Unable to save topic."
+      );
+    } finally {
+      setLoading(false);
+    }
   }
+
+  // ==========================================================
+  // UI
+  // ==========================================================
 
   return (
     <form
-      action={handleSubmit}
-      className="space-y-4"
+      onSubmit={handleSubmit}
+      className="space-y-5"
     >
+      {/* SUBJECT */}
+
       <EntitySelect
         label="Subject"
         value={subjectId}
@@ -99,6 +183,8 @@ export default function TopicForm({
         }}
       />
 
+      {/* CHAPTER */}
+
       <EntitySelect
         label="Chapter"
         value={chapterId}
@@ -108,11 +194,7 @@ export default function TopicForm({
         onChange={setChapterId}
       />
 
-      <input
-        type="hidden"
-        name="chapter_id"
-        value={chapterId}
-      />
+      {/* TOPIC NAME */}
 
       <div>
         <Label htmlFor="name">
@@ -122,11 +204,15 @@ export default function TopicForm({
         <Input
           id="name"
           name="name"
-          defaultValue={topic?.name}
+          defaultValue={
+            topic?.name ?? ""
+          }
           placeholder="Newton's Laws"
           required
         />
       </div>
+
+      {/* DESCRIPTION */}
 
       <div>
         <Label htmlFor="description">
@@ -136,14 +222,20 @@ export default function TopicForm({
         <Textarea
           id="description"
           name="description"
-          defaultValue={topic?.description}
+          defaultValue={
+            topic?.description ?? ""
+          }
           placeholder="Optional description"
         />
       </div>
 
+      {/* SAVE */}
+
       <Button
         type="submit"
-        disabled={loading}
+        disabled={
+          loading || !chapterId
+        }
         className="w-full"
       >
         {loading

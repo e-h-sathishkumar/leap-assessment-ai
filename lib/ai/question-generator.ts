@@ -8,18 +8,109 @@ import type { PromptRequest } from "./types";
 export async function generateQuestions(
   request: PromptRequest
 ) {
-  const prompt = buildPrompt(request);
+  console.log(
+    "========== QUESTION GENERATION =========="
+  );
 
-  const response = await generateWithGemini(prompt);
-  console.log("========== GEMINI RAW RESPONSE ==========");
-console.log(response);
-console.log("=========================================");
+  console.log(
+    "Request:",
+    request
+  );
 
-  console.log("========== GEMINI RAW RESPONSE ==========");
-  console.log(response);
-  console.log("=========================================");
+  // =========================================================
+  // BUILD PROMPT
+  // =========================================================
 
-  const json = parseAIResponse(response);
+  const prompt =
+    buildPrompt(
+      request
+    );
 
-  return validateQuestions(json.questions);
+  console.log(
+    "========== AI PROMPT =========="
+  );
+
+  console.log(
+    prompt
+  );
+
+  console.log(
+    "================================"
+  );
+
+  // =========================================================
+  // CALL GEMINI
+  // =========================================================
+
+  const response =
+    await generateWithGemini(
+      prompt
+    );
+
+  console.log(
+    "========== GEMINI RAW RESPONSE =========="
+  );
+
+  console.log(
+    response
+  );
+
+  console.log(
+    "=========================================="
+  );
+
+  // =========================================================
+  // PARSE
+  // =========================================================
+
+  const parsed =
+    parseAIResponse(
+      response
+    );
+
+  console.log(
+    "========== PARSED QUESTIONS =========="
+  );
+
+  console.log(
+    parsed.questions
+  );
+
+  console.log(
+    "Question count:",
+    parsed.questions.length
+  );
+
+  console.log(
+    "======================================="
+  );
+
+  // =========================================================
+  // VALIDATE
+  // =========================================================
+
+  const result =
+    validateQuestions(
+      parsed.questions
+    );
+
+  console.log(
+    "========== VALIDATION RESULT =========="
+  );
+
+  console.log(
+    "Valid:",
+    result.valid.length
+  );
+
+  console.log(
+    "Invalid:",
+    result.invalid.length
+  );
+
+  console.log(
+    "======================================="
+  );
+
+  return result;
 }

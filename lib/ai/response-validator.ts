@@ -24,35 +24,124 @@ interface AIQuestion {
 }
 
 export function validateQuestions(
-  questions: AIQuestion[]
+  questions: unknown[]
 ) {
-  console.log("========== VALIDATOR ==========");
-  console.log("Received:", questions?.length);
-  console.log(questions);
-  console.log("===============================");
+  console.log(
+    "========== VALIDATOR =========="
+  );
+
+  console.log(
+    "Received:",
+    questions?.length
+  );
+
+  console.log(
+    questions
+  );
+
+  console.log(
+    "==============================="
+  );
 
   const valid: AIQuestion[] = [];
-  const invalid: AIQuestion[] = [];
 
-  for (const question of questions ?? []) {
+  const invalid: unknown[] = [];
 
-    const ok =
-      question.question &&
-      question.options?.A &&
-      question.options?.B &&
-      question.options?.C &&
-      question.options?.D &&
-      question.correct_answer;
+  for (
+    const question of questions ?? []
+  ) {
 
-    if (ok) {
-      valid.push(question);
+    if (
+      !question ||
+      typeof question !== "object"
+    ) {
+      invalid.push(
+        question
+      );
+
+      continue;
+    }
+
+    const q =
+      question as Record<
+        string,
+        unknown
+      >;
+
+    const options =
+      q.options as
+        | Record<
+            string,
+            unknown
+          >
+        | undefined;
+
+    const isValid =
+      typeof q.question ===
+        "string" &&
+      q.question.trim().length > 0 &&
+
+      !!options &&
+
+      typeof options.A ===
+        "string" &&
+      options.A.trim().length > 0 &&
+
+      typeof options.B ===
+        "string" &&
+      options.B.trim().length > 0 &&
+
+      typeof options.C ===
+        "string" &&
+      options.C.trim().length > 0 &&
+
+      typeof options.D ===
+        "string" &&
+      options.D.trim().length > 0 &&
+
+      typeof q.correct_answer ===
+        "string" &&
+      q.correct_answer.trim().length > 0;
+
+    if (isValid) {
+
+      valid.push(
+        q as unknown as AIQuestion
+      );
+
     } else {
-      invalid.push(question);
+
+      invalid.push(
+        question
+      );
     }
   }
 
-  console.log("Valid:", valid.length);
-  console.log("Invalid:", invalid.length);
+  console.log(
+    "Valid:",
+    valid.length
+  );
+
+  console.log(
+    "Invalid:",
+    invalid.length
+  );
+
+  if (
+    invalid.length > 0
+  ) {
+    console.log(
+      "========== INVALID QUESTIONS =========="
+    );
+
+    console.log(
+      invalid
+    );
+
+    console.log(
+      "========================================"
+    );
+  }
 
   return {
     valid,

@@ -20,13 +20,33 @@ export type BloomLevel =
   | "Create";
 
 export interface PromptRequest {
+  // -----------------------------------------
+  // REQUIRED ACADEMIC CONTEXT
+  // -----------------------------------------
+
   exam: ExamPattern;
+
+  className: string;
 
   subject: string;
 
-  chapter: string;
+  // -----------------------------------------
+  // OPTIONAL ACADEMIC PRECISION
+  // -----------------------------------------
+  //
+  // AI can generate without either of these.
+  //
+  // Empty string means:
+  // "Let AI choose appropriate content."
+  //
 
-  topic: string;
+  chapter?: string;
+
+  topic?: string;
+
+  // -----------------------------------------
+  // QUESTION CONFIGURATION
+  // -----------------------------------------
 
   questionType: string;
 
@@ -47,4 +67,10 @@ export interface PromptRequest {
   includeTags: boolean;
 
   avoidDuplicates: boolean;
+
+  // -----------------------------------------
+  // ADDITIONAL TEACHER INSTRUCTIONS
+  // -----------------------------------------
+
+  additionalInstructions?: string;
 }

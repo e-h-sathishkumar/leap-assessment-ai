@@ -3,9 +3,9 @@
 import { useState } from "react";
 
 import {
-  createChapterAction,
-  updateChapterAction,
-} from "@/app/repository/chapters/actions";
+  createChapter,
+  updateChapter,
+} from "@/services/chapter.service";
 
 import type { Chapter } from "@/types/chapter";
 import type { Subject } from "@/types/subject";
@@ -38,71 +38,147 @@ export default function ChapterForm({
   subjects,
   onSuccess,
 }: ChapterFormProps) {
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] =
+    useState(false);
 
-  const [subjectId, setSubjectId] = useState(
-    chapter?.subject_id?.toString() ?? ""
-  );
+  const [subjectId, setSubjectId] =
+    useState(
+      chapter?.subject_id?.toString() ?? ""
+    );
 
-  async function handleSubmit(formData: FormData) {
-    setLoading(true);
+  const [name, setName] =
+    useState(
+      chapter?.name ?? ""
+    );
 
-    const result =
-      mode === "create"
-        ? await createChapterAction(formData)
-        : await updateChapterAction(
-            chapter!.id!,
-            formData
-          );
+  const [description, setDescription] =
+    useState(
+      chapter?.description ?? ""
+    );
 
-    setLoading(false);
+  async function handleSubmit(
+    event: React.FormEvent<HTMLFormElement>
+  ) {
+    event.preventDefault();
 
-    if (!result.success) {
-      toast.error(result.message);
+    if (!subjectId) {
+      toast.error(
+        "Please select a subject."
+      );
       return;
     }
 
-    toast.success(result.message);
+    if (!name.trim()) {
+      toast.error(
+        "Please enter a chapter name."
+      );
+      return;
+    }
 
-    onSuccess?.();
+    setLoading(true);
+
+    try {
+      if (mode === "create") {
+        await createChapter({
+          subject_id: Number(subjectId),
+          name: name.trim(),
+          description:
+            description.trim() ||
+            undefined,
+        } as Chapter);
+
+        toast.success(
+          "Chapter created successfully."
+        );
+      } else {
+        if (!chapter?.id) {
+          throw new Error(
+            "Chapter ID is missing."
+          );
+        }
+
+        await updateChapter(
+          chapter.id,
+          {
+            subject_id: Number(subjectId),
+            name: name.trim(),
+            description:
+              description.trim() ||
+              undefined,
+          }
+        );
+
+        toast.success(
+          "Chapter updated successfully."
+        );
+      }
+
+      onSuccess?.();
+
+    } catch (error) {
+      console.error(
+        "Chapter save error:",
+        error
+      );
+
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Unable to save chapter."
+      );
+
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
     <form
-      action={handleSubmit}
-      className="space-y-4"
+      onSubmit={handleSubmit}
+      className="space-y-5"
     >
+      {/* SUBJECT */}
+
       <div className="space-y-2">
-        <Label>Subject</Label>
+
+        <Label htmlFor="subject">
+          Subject
+        </Label>
 
         <Select
           value={subjectId}
           onValueChange={setSubjectId}
+          disabled={loading}
         >
-          <SelectTrigger className="w-full">
+          <SelectTrigger
+            id="subject"
+            className="w-full"
+          >
             <SelectValue placeholder="Select Subject" />
           </SelectTrigger>
 
           <SelectContent>
-            {subjects.map((subject) => (
-              <SelectItem
-                key={subject.id}
-                value={subject.id!.toString()}
-              >
-                {subject.name}
-              </SelectItem>
-            ))}
+            {subjects.map(
+              (subject) => (
+                <SelectItem
+                  key={subject.id}
+                  value={String(
+                    subject.id
+                  )}
+                >
+                  {subject.name}
+                </SelectItem>
+              )
+            )}
           </SelectContent>
         </Select>
 
-        <input
-          type="hidden"
-          name="subject_id"
-          value={subjectId}
-        />
       </div>
 
-      <div>
+      {/* CHAPTER NAME */}
+
+      <div className="space-y-2">
+
         <Label htmlFor="name">
           Chapter Name
         </Label>
@@ -110,13 +186,23 @@ export default function ChapterForm({
         <Input
           id="name"
           name="name"
-          defaultValue={chapter?.name}
+          value={name}
+          onChange={(event) =>
+            setName(
+              event.target.value
+            )
+          }
           placeholder="Mechanics"
+          disabled={loading}
           required
         />
+
       </div>
 
-      <div>
+      {/* DESCRIPTION */}
+
+      <div className="space-y-2">
+
         <Label htmlFor="description">
           Description
         </Label>
@@ -124,10 +210,20 @@ export default function ChapterForm({
         <Textarea
           id="description"
           name="description"
-          defaultValue={chapter?.description}
+          value={description}
+          onChange={(event) =>
+            setDescription(
+              event.target.value
+            )
+          }
           placeholder="Optional description"
+          disabled={loading}
+          rows={4}
         />
+
       </div>
+
+      {/* SUBMIT */}
 
       <Button
         type="submit"
@@ -142,6 +238,7 @@ export default function ChapterForm({
           ? "Save Chapter"
           : "Update Chapter"}
       </Button>
+
     </form>
   );
 }

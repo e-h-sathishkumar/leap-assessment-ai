@@ -1,65 +1,53 @@
+// ============================================================
+// LEAP Assessment AI
+// Question Workspace Constants
+// ============================================================
+
+/**
+ * Question workflow status
+ */
 export const QuestionStatus = [
   "Draft",
-  "AI Generated",
-  "Reviewed",
+  "Review",
   "Approved",
-  "Archived",
+  "Published",
 ] as const;
 
-export const CorrectAnswers = [
-   "A",
-  "B",
-  "C",
-  "D",
-  "E",
-] as const;
-
+/**
+ * Question source
+ */
 export const SourceTypes = [
-  "Teacher",
+  "Manual",
   "AI",
-  "NCERT",
-  "Previous Year",
-  "Reference Book",
-  "Olympiad",
-  "NEET",
-  "JEE Main",
-  "JEE Advanced",
+  "Imported",
+  "Repository",
 ] as const;
 
+/**
+ * AI providers supported by the question workspace
+ */
 export const AIProviders = [
-  "Teacher",
   "Gemini",
   "OpenAI",
   "Claude",
-  "NotebookLM",
-  "Perplexity",
-  "Grok",
+  "Manual",
 ] as const;
 
+/**
+ * Correct answer options
+ */
+export const CorrectAnswers = [
+  "A",
+  "B",
+  "C",
+  "D",
+] as const;
+
+/**
+ * Default assessment settings
+ */
 export const DefaultAssessment = {
   marks: 4,
   negativeMarks: 1,
-  estimatedTimeSeconds: 90,
-};
-export const QuestionWorkspaceTabs = [
-  {
-    id: "manual",
-    title: "Manual Entry",
-    icon: "FileText",
-  },
-  {
-    id: "ai",
-    title: "Generate with AI",
-    icon: "Sparkles",
-  },
-  {
-    id: "upload",
-    title: "Generate from File",
-    icon: "Upload",
-  },
-  {
-    id: "review",
-    title: "Review Queue",
-    icon: "ClipboardCheck",
-  },
-] as const;
+  estimatedTimeSeconds: 60,
+} as const;

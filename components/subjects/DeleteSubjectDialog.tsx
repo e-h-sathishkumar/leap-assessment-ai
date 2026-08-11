@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 
-import { deleteSubjectAction } from "@/app/repository/subjects/actions";
 import type { Subject } from "@/types/subject";
+import { deleteSubject } from "@/services/subject.service";
 
 import { toast } from "sonner";
 
@@ -28,20 +28,35 @@ export default function DeleteSubjectDialog({
   const [loading, setLoading] = useState(false);
 
   async function handleDelete() {
-    setLoading(true);
-
-    const result = await deleteSubjectAction(subject.id!);
-
-    setLoading(false);
-
-    if (!result.success) {
-      toast.error(result.message);
+    if (!subject.id) {
+      toast.error("Invalid subject.");
       return;
     }
 
-    toast.success(result.message);
+    try {
+      setLoading(true);
 
-    setOpen(false);
+      await deleteSubject(subject.id);
+
+      toast.success(
+        `Subject "${subject.name}" deleted successfully.`
+      );
+
+      setOpen(false);
+    } catch (error) {
+      console.error(
+        "DELETE SUBJECT ERROR:",
+        error
+      );
+
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Unable to delete subject."
+      );
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -65,17 +80,20 @@ export default function DeleteSubjectDialog({
           </DialogTitle>
         </DialogHeader>
 
-        <p className="text-sm text-slate-600">
-          Are you sure you want to delete{" "}
-          <strong>{subject.name}</strong>?
-        </p>
+        <div className="space-y-3">
+          <p className="text-sm text-slate-600">
+            Are you sure you want to delete{" "}
+            <strong>{subject.name}</strong>?
+          </p>
 
-        <p className="text-sm text-red-500">
-          This action cannot be undone.
-        </p>
+          <p className="text-sm text-red-500">
+            This action cannot be undone.
+          </p>
+        </div>
 
         <div className="flex justify-end gap-2 pt-4">
           <Button
+            type="button"
             variant="outline"
             onClick={() => setOpen(false)}
             disabled={loading}
@@ -84,6 +102,7 @@ export default function DeleteSubjectDialog({
           </Button>
 
           <Button
+            type="button"
             variant="destructive"
             onClick={handleDelete}
             disabled={loading}

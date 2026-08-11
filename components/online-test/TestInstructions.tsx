@@ -1,5 +1,7 @@
 "use client";
 
+import { supabase } from "@/lib/supabase";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 interface Props {
@@ -11,135 +13,452 @@ export default function TestInstructions({
 }: Props) {
   const router = useRouter();
 
+  const [starting, setStarting] =
+    useState(false);
+
+  const [error, setError] =
+    useState("");
+
+  // =====================================================
+  // START TEST
+  // =====================================================
+
   async function handleStart() {
-  try {
-    const studentId = "d30716e7-0c71-44c0-9317-f16849d0f11c"; // replace with auth later
+    if (starting) return;
 
-    const response = await fetch(
-      "/api/test-attempts",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          testId: test.id,
-          studentId,
-        }),
+    try {
+      setStarting(true);
+      setError("");
+
+      // -------------------------------------------------
+      // GET AUTHENTICATED STUDENT
+      // -------------------------------------------------
+
+      const {
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser();
+
+      if (authError) {
+        console.error(
+          "AUTH ERROR:",
+          authError
+        );
+
+        throw new Error(
+          authError.message
+        );
       }
-    );
 
-    const attempt = await response.json();
+      if (!user) {
+        throw new Error(
+          "Student session has expired. Please login again."
+        );
+      }
 
-    if (!response.ok) {
-      throw new Error(
-        attempt.error ??
-          "Unable to start test."
+      // -------------------------------------------------
+      // REAL SUPABASE STUDENT ID
+      // -------------------------------------------------
+
+      const studentId = user.id;
+
+      console.log(
+        "========================================"
       );
+
+      console.log(
+        "STUDENT AUTHENTICATION"
+      );
+
+      console.log(
+        "Student ID:",
+        studentId
+      );
+
+      console.log(
+        "Student Email:",
+        user.email
+      );
+
+      console.log(
+        "========================================"
+      );
+
+      // -------------------------------------------------
+      // TEST INFORMATION
+      // -------------------------------------------------
+
+      console.log(
+        "========================================"
+      );
+
+      console.log(
+        "STARTING STUDENT TEST"
+      );
+
+      console.log(
+        "Test ID:",
+        test.id
+      );
+
+      console.log(
+        "Student ID:",
+        studentId
+      );
+
+      console.log(
+        "========================================"
+      );
+
+      // -------------------------------------------------
+      // CREATE TEST ATTEMPT
+      // -------------------------------------------------
+
+      const response =
+        await fetch(
+          "/api/test-attempts",
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body: JSON.stringify({
+              testId: test.id,
+              studentId: studentId,
+            }),
+          }
+        );
+
+      // -------------------------------------------------
+      // READ API RESPONSE
+      // -------------------------------------------------
+
+      const data =
+        await response.json();
+
+      console.log(
+        "========================================"
+      );
+
+      console.log(
+        "CREATE ATTEMPT RESPONSE"
+      );
+
+      console.log(
+        data
+      );
+
+      console.log(
+        "HTTP STATUS:",
+        response.status
+      );
+
+      console.log(
+        "========================================"
+      );
+
+      // -------------------------------------------------
+      // API ERROR
+      // -------------------------------------------------
+
+      if (!response.ok) {
+        throw new Error(
+          data?.error ??
+            "Unable to start test."
+        );
+      }
+
+      // -------------------------------------------------
+      // VALIDATE ATTEMPT ID
+      // -------------------------------------------------
+
+      if (!data?.id) {
+        throw new Error(
+          "Test attempt was created but no attempt ID was returned."
+        );
+      }
+
+      // -------------------------------------------------
+      // SAVE CURRENT ATTEMPT
+      // -------------------------------------------------
+
+      sessionStorage.setItem(
+        "leap_current_attempt_id",
+        String(data.id)
+      );
+
+      sessionStorage.setItem(
+        "leap_current_test_id",
+        String(test.id)
+      );
+
+      sessionStorage.setItem(
+        "leap_current_student_id",
+        String(studentId)
+      );
+
+      // -------------------------------------------------
+      // GO TO EXAM
+      // -------------------------------------------------
+
+      console.log(
+        "Attempt created successfully."
+      );
+
+      console.log(
+        "Attempt ID:",
+        data.id
+      );
+
+      console.log(
+        "Redirecting to exam..."
+      );
+
+      router.push(
+        `/online-test/${test.id}/attempt/${data.id}`
+      );
+
+    } catch (err) {
+      console.error(
+        "========================================"
+      );
+
+      console.error(
+        "START TEST ERROR"
+      );
+
+      console.error(
+        err
+      );
+
+      console.error(
+        "========================================"
+      );
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Unable to start test."
+      );
+
+      setStarting(false);
     }
-
-    router.push(
-      `/online-test/${test.id}/attempt/${attempt.id}`
-    );
-
-  } catch (err) {
-    console.error(err);
-    alert("Unable to start test.");
   }
-}
+
+  // =====================================================
+  // UI
+  // =====================================================
 
   return (
-    <div className="mx-auto max-w-5xl rounded-xl border bg-white p-8 shadow">
+    <main className="min-h-screen bg-slate-100 px-6 py-10">
 
-      <h1 className="text-3xl font-bold">
-        {test.title}
-      </h1>
+      <div className="mx-auto max-w-5xl rounded-2xl border bg-white p-8 shadow-lg">
 
-      <div className="mt-8 grid grid-cols-2 gap-6">
+        {/* Header */}
 
-        <div>
-          <strong>Subject</strong>
-          <p>{test.subjects?.name}</p>
-        </div>
+        <div className="border-b pb-6">
 
-        <div>
-          <strong>Exam</strong>
-          <p>{test.exam_type}</p>
-        </div>
-
-        <div>
-          <strong>Duration</strong>
-          <p>{test.duration} Minutes</p>
-        </div>
-
-        <div>
-          <strong>Total Questions</strong>
-          <p>
-            {test.total_questions}
+          <p className="text-sm font-semibold uppercase tracking-wide text-green-600">
+            LEAP Assessment
           </p>
+
+          <h1 className="mt-2 text-3xl font-bold text-slate-900">
+            {test.title}
+          </h1>
+
+          <p className="mt-2 text-slate-500">
+            Read the instructions carefully before starting.
+          </p>
+
         </div>
 
-        <div>
-          <strong>Total Marks</strong>
-          <p>
-            {test.maximum_marks}
-          </p>
+        {/* Test Information */}
+
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+
+          <InfoCard
+            label="Subject"
+            value={
+              test.subjects?.name ??
+              "Not specified"
+            }
+          />
+
+          <InfoCard
+            label="Exam"
+            value={
+              test.exam_type ??
+              "Not specified"
+            }
+          />
+
+          <InfoCard
+            label="Duration"
+            value={`${test.duration ?? 0} Minutes`}
+          />
+
+          <InfoCard
+            label="Questions"
+            value={String(
+              test.total_questions ?? 0
+            )}
+          />
+
+          <InfoCard
+            label="Maximum Marks"
+            value={String(
+              test.maximum_marks ?? 0
+            )}
+          />
+
+          <InfoCard
+            label="Negative Marking"
+            value={
+              test.negative_marking
+                ? "Yes"
+                : "No"
+            }
+          />
+
         </div>
 
-        <div>
-          <strong>Negative Marking</strong>
-          <p>
-            {test.negative_marking
-              ? "Yes"
-              : "No"}
-          </p>
+        {/* Instructions */}
+
+        <div className="mt-10 rounded-xl border border-blue-200 bg-blue-50 p-6">
+
+          <h2 className="text-xl font-bold text-slate-900">
+            Instructions
+          </h2>
+
+          <ul className="mt-5 space-y-3 text-slate-700">
+
+            <li className="flex gap-3">
+              <span className="font-bold text-blue-600">
+                1.
+              </span>
+
+              Read every question carefully.
+            </li>
+
+            <li className="flex gap-3">
+              <span className="font-bold text-blue-600">
+                2.
+              </span>
+
+              Select the best answer for each question.
+            </li>
+
+            <li className="flex gap-3">
+              <span className="font-bold text-blue-600">
+                3.
+              </span>
+
+              Your answers are automatically saved.
+            </li>
+
+            <li className="flex gap-3">
+              <span className="font-bold text-blue-600">
+                4.
+              </span>
+
+              You can move between questions using the question palette.
+            </li>
+
+            <li className="flex gap-3">
+              <span className="font-bold text-blue-600">
+                5.
+              </span>
+
+              You can mark questions for review.
+            </li>
+
+            <li className="flex gap-3">
+              <span className="font-bold text-blue-600">
+                6.
+              </span>
+
+              Do not close or refresh the browser during the examination.
+            </li>
+
+            <li className="flex gap-3">
+              <span className="font-bold text-blue-600">
+                7.
+              </span>
+
+              The timer starts when you click Start Test.
+            </li>
+
+            <li className="flex gap-3">
+              <span className="font-bold text-blue-600">
+                8.
+              </span>
+
+              Submit the test before the allotted time expires.
+            </li>
+
+          </ul>
+
+        </div>
+
+        {/* Error */}
+
+        {error && (
+          <div className="mt-6 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+
+            {error}
+
+          </div>
+        )}
+
+        {/* Start Button */}
+
+        <div className="mt-10 flex justify-end">
+
+          <button
+            type="button"
+            onClick={handleStart}
+            disabled={starting}
+            className="rounded-xl bg-green-600 px-10 py-4 font-semibold text-white shadow transition hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+
+            {starting
+              ? "Starting Test..."
+              : "Start Test"}
+
+          </button>
+
         </div>
 
       </div>
 
-      <div className="mt-10 rounded-lg bg-blue-50 p-6">
+    </main>
+  );
+}
 
-        <h2 className="mb-4 text-xl font-semibold">
-          Instructions
-        </h2>
+// =====================================================
+// INFORMATION CARD
+// =====================================================
 
-        <ul className="list-disc space-y-2 pl-5">
+function InfoCard({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
+  return (
+    <div className="rounded-xl border bg-slate-50 p-5">
 
-          <li>
-            Read every question carefully.
-          </li>
+      <p className="text-sm font-medium text-slate-500">
+        {label}
+      </p>
 
-          <li>
-            Do not refresh the browser.
-          </li>
-
-          <li>
-            Your answers are auto-saved.
-          </li>
-
-          <li>
-            Timer starts immediately after
-            clicking Start Test.
-          </li>
-
-          <li>
-            Submit before the timer ends.
-          </li>
-
-        </ul>
-
-      </div>
-
-      <div className="mt-10 flex justify-end">
-
-        <button
-          onClick={handleStart}
-          className="rounded-lg bg-green-600 px-8 py-3 text-white hover:bg-green-700"
-        >
-          Start Test
-        </button>
-
-      </div>
+      <p className="mt-1 text-lg font-bold text-slate-900">
+        {value}
+      </p>
 
     </div>
   );

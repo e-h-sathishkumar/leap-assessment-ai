@@ -2,7 +2,10 @@
 
 import { useState } from "react";
 
-import { deleteTopicAction } from "@/app/repository/topics/actions";
+import {
+  deleteTopic as deleteTopicService,
+} from "@/services/topic.service";
+
 import type { Topic } from "@/types/topic";
 
 import { toast } from "sonner";
@@ -28,19 +31,35 @@ export default function DeleteTopicDialog({
   const [loading, setLoading] = useState(false);
 
   async function handleDelete() {
-    setLoading(true);
-
-    const result = await deleteTopicAction(topic.id!);
-
-    setLoading(false);
-
-    if (!result.success) {
-      toast.error(result.message);
+    if (!topic.id) {
+      toast.error("Invalid topic.");
       return;
     }
 
-    toast.success(result.message);
-    setOpen(false);
+    try {
+      setLoading(true);
+
+      await deleteTopicService(topic.id);
+
+      toast.success(
+        `Topic "${topic.name}" deleted successfully.`
+      );
+
+      setOpen(false);
+    } catch (error) {
+      console.error(
+        "DELETE TOPIC ERROR:",
+        error
+      );
+
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Unable to delete topic."
+      );
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -64,17 +83,20 @@ export default function DeleteTopicDialog({
           </DialogTitle>
         </DialogHeader>
 
-        <p className="text-sm text-slate-600">
-          Are you sure you want to delete{" "}
-          <strong>{topic.name}</strong>?
-        </p>
+        <div className="space-y-3">
+          <p className="text-sm text-slate-600">
+            Are you sure you want to delete{" "}
+            <strong>{topic.name}</strong>?
+          </p>
 
-        <p className="text-sm text-red-500">
-          This action cannot be undone.
-        </p>
+          <p className="text-sm text-red-500">
+            This action cannot be undone.
+          </p>
+        </div>
 
         <div className="flex justify-end gap-2 pt-4">
           <Button
+            type="button"
             variant="outline"
             onClick={() => setOpen(false)}
             disabled={loading}
@@ -83,11 +105,14 @@ export default function DeleteTopicDialog({
           </Button>
 
           <Button
+            type="button"
             variant="destructive"
             onClick={handleDelete}
             disabled={loading}
           >
-            {loading ? "Deleting..." : "Delete"}
+            {loading
+              ? "Deleting..."
+              : "Delete"}
           </Button>
         </div>
       </DialogContent>

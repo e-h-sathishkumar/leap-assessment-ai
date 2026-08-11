@@ -2,13 +2,9 @@
 
 import { useState } from "react";
 
-import { deleteChapterAction } from "@/app/repository/chapters/actions";
-
 import type { Chapter } from "@/types/chapter";
 
-import { toast } from "sonner";
-
-import { Button } from "@/components/ui/button";
+import { deleteChapter } from "@/services/chapter.service";
 
 import {
   Dialog,
@@ -18,6 +14,10 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
+import { Button } from "@/components/ui/button";
+
+import { toast } from "sonner";
+
 interface DeleteChapterDialogProps {
   chapter: Chapter;
 }
@@ -25,26 +25,51 @@ interface DeleteChapterDialogProps {
 export default function DeleteChapterDialog({
   chapter,
 }: DeleteChapterDialogProps) {
-  const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [open, setOpen] =
+    useState(false);
+
+  const [loading, setLoading] =
+    useState(false);
 
   async function handleDelete() {
-    setLoading(true);
-
-    const result = await deleteChapterAction(
-      chapter.id!
-    );
-
-    setLoading(false);
-
-    if (!result.success) {
-      toast.error(result.message);
+    if (!chapter.id) {
+      toast.error(
+        "Chapter ID is missing."
+      );
       return;
     }
 
-    toast.success(result.message);
+    setLoading(true);
 
-    setOpen(false);
+    try {
+      await deleteChapter(
+        chapter.id
+      );
+
+      toast.success(
+        "Chapter deleted successfully."
+      );
+
+      setOpen(false);
+
+      // Refresh the current page
+      window.location.reload();
+
+    } catch (error) {
+      console.error(
+        "Delete chapter error:",
+        error
+      );
+
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Unable to delete chapter."
+      );
+
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -54,6 +79,7 @@ export default function DeleteChapterDialog({
     >
       <DialogTrigger asChild>
         <Button
+          type="button"
           variant="destructive"
           size="sm"
         >
@@ -62,42 +88,56 @@ export default function DeleteChapterDialog({
       </DialogTrigger>
 
       <DialogContent className="sm:max-w-md">
+
         <DialogHeader>
           <DialogTitle>
             Delete Chapter
           </DialogTitle>
         </DialogHeader>
 
-        <p className="text-sm text-slate-600">
-          Are you sure you want to delete{" "}
-          <strong>{chapter.name}</strong>?
-        </p>
+        <div className="space-y-4">
 
-        <p className="text-sm text-red-500">
-          This action cannot be undone.
-        </p>
+          <p className="text-sm leading-6 text-slate-600">
+            Are you sure you want to
+            delete{" "}
+            <strong>
+              {chapter.name}
+            </strong>
+            ?
+          </p>
 
-        <div className="flex justify-end gap-2 pt-4">
+          <p className="text-sm text-red-600">
+            This action cannot be undone.
+          </p>
 
-          <Button
-            variant="outline"
-            onClick={() => setOpen(false)}
-            disabled={loading}
-          >
-            Cancel
-          </Button>
+          <div className="flex justify-end gap-3">
 
-          <Button
-            variant="destructive"
-            onClick={handleDelete}
-            disabled={loading}
-          >
-            {loading
-              ? "Deleting..."
-              : "Delete"}
-          </Button>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={loading}
+              onClick={() =>
+                setOpen(false)
+              }
+            >
+              Cancel
+            </Button>
+
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={loading}
+              onClick={handleDelete}
+            >
+              {loading
+                ? "Deleting..."
+                : "Delete Chapter"}
+            </Button>
+
+          </div>
 
         </div>
+
       </DialogContent>
     </Dialog>
   );

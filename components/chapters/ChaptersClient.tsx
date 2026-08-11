@@ -19,25 +19,57 @@ export default function ChaptersClient({
   chapters,
   subjects,
 }: ChaptersClientProps) {
-  const [search, setSearch] = useState("");
+  const [search, setSearch] =
+    useState("");
 
-  const filteredChapters = useMemo(() => {
-    const value = search.toLowerCase();
+  const filteredChapters =
+    useMemo(() => {
+      const value =
+        search.trim().toLowerCase();
 
-    return chapters.filter(
-      (chapter) =>
-        chapter.name.toLowerCase().includes(value) ||
-        chapter.subjects?.name
-          ?.toLowerCase()
-          .includes(value)
-    );
-  }, [chapters, search]);
+      if (!value) {
+        return chapters;
+      }
+
+      return chapters.filter(
+        (chapter) => {
+          const subject =
+            subjects.find(
+              (item) =>
+                item.id ===
+                chapter.subject_id
+            );
+
+          const chapterName =
+            chapter.name
+              ?.toLowerCase() ?? "";
+
+          const subjectName =
+            subject?.name
+              ?.toLowerCase() ?? "";
+
+          const chapterCode =
+            chapter.code
+              ?.toLowerCase() ?? "";
+
+          return (
+            chapterName.includes(value) ||
+            subjectName.includes(value) ||
+            chapterCode.includes(value)
+          );
+        }
+      );
+    }, [chapters, subjects, search]);
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+
+      {/* HEADER */}
+
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+
         <div>
-          <h1 className="text-3xl font-bold">
+          <h1 className="text-2xl font-bold text-slate-900">
             Chapter Management
           </h1>
 
@@ -49,19 +81,29 @@ export default function ChaptersClient({
         <AddChapterDialog
           subjects={subjects}
         />
+
       </div>
 
-      <ChapterStats chapters={chapters} />
+      {/* STATS */}
+
+      <ChapterStats
+        chapters={chapters}
+      />
+
+      {/* SEARCH */}
 
       <ChapterSearch
         value={search}
         onChange={setSearch}
       />
 
+      {/* TABLE */}
+
       <ChapterTable
-  chapters={filteredChapters}
-  subjects={subjects}
-/>
+        chapters={filteredChapters}
+        subjects={subjects}
+      />
+
     </div>
   );
 }

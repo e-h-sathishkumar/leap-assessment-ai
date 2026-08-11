@@ -1,16 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { getSavedQuestions } from "@/services/test.service";
+import { useEffect, useState } from "react";
 
 import type { Subject } from "@/types/subject";
-import { useEffect } from "react";
-
-import { getChapters } from "@/services/chapter.service";
-import { getTopicsByChapter } from "@/services/topic.service";
-
 import type { Chapter } from "@/types/chapter";
 import type { Topic } from "@/types/topic";
+
+import { getSavedQuestions } from "@/services/test.service";
+import { getChapters } from "@/services/chapter.service";
+import { getTopicsByChapter } from "@/services/topic.service";
 
 import {
   Dialog,
@@ -23,12 +21,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+
 import EntitySelect from "@/components/common/EntitySelect";
 
 interface AddTestDialogProps {
   subjects: Subject[];
 }
-
 
 export default function AddTestDialog({
   subjects,
@@ -37,75 +35,200 @@ export default function AddTestDialog({
 
   const [title, setTitle] = useState("");
   const [exam, setExam] = useState("NEET");
+
   const [subjectId, setSubjectId] = useState("");
+  const [chapterId, setChapterId] = useState("");
+  const [topicId, setTopicId] = useState("");
+
   const [duration, setDuration] = useState("180");
   const [marks, setMarks] = useState("720");
-const [chapters, setChapters] = useState<Chapter[]>([]);
-const [topics, setTopics] = useState<Topic[]>([]);
 
-const [chapterId, setChapterId] = useState("");
-const [topicId, setTopicId] = useState("");
-const [questions, setQuestions] = useState<any[]>([]);
-const [selectedQuestions, setSelectedQuestions] = useState<number[]>([]);
-useEffect(() => {
-  if (!subjectId) {
-    setChapters([]);
-    setTopics([]);
-    setChapterId("");
-    setTopicId("");
-    return;
-  }
-useEffect(() => {
-  if (!topicId) {
-    setQuestions([]);
-    return;
-  }
+  const [chapters, setChapters] = useState<Chapter[]>(
+    []
+  );
 
-  async function loadQuestions() {
-    const data = await getSavedQuestions(
-      Number(subjectId),
-      Number(chapterId),
-      Number(topicId)
+  const [topics, setTopics] = useState<Topic[]>(
+    []
+  );
+
+  const [questions, setQuestions] = useState<any[]>(
+    []
+  );
+
+  const [selectedQuestions, setSelectedQuestions] =
+    useState<number[]>([]);
+
+  // ==========================================================
+  // LOAD CHAPTERS WHEN SUBJECT CHANGES
+  // ==========================================================
+
+  useEffect(() => {
+    if (!subjectId) {
+      setChapters([]);
+      setTopics([]);
+      setChapterId("");
+      setTopicId("");
+      return;
+    }
+
+    async function loadChapters() {
+      try {
+        const data = await getChapters(
+          Number(subjectId)
+        );
+
+        setChapters(data);
+      } catch (error) {
+        console.error(
+          "LOAD CHAPTERS ERROR:",
+          error
+        );
+
+        setChapters([]);
+      }
+    }
+
+    loadChapters();
+  }, [subjectId]);
+
+  // ==========================================================
+  // LOAD TOPICS WHEN CHAPTER CHANGES
+  // ==========================================================
+
+  useEffect(() => {
+    if (!chapterId) {
+      setTopics([]);
+      setTopicId("");
+      return;
+    }
+
+    async function loadTopics() {
+      try {
+        const data =
+          await getTopicsByChapter(
+            Number(chapterId)
+          );
+
+        setTopics(data);
+      } catch (error) {
+        console.error(
+          "LOAD TOPICS ERROR:",
+          error
+        );
+
+        setTopics([]);
+      }
+    }
+
+    loadTopics();
+  }, [chapterId]);
+
+  // ==========================================================
+  // LOAD SAVED QUESTIONS
+  // ==========================================================
+
+  useEffect(() => {
+    if (
+      !subjectId ||
+      !chapterId ||
+      !topicId
+    ) {
+      setQuestions([]);
+      return;
+    }
+
+    async function loadQuestions() {
+      try {
+        const data =
+          await getSavedQuestions(
+            Number(subjectId),
+            Number(chapterId),
+            Number(topicId)
+          );
+
+        setQuestions(data ?? []);
+      } catch (error) {
+        console.error(
+          "LOAD QUESTIONS ERROR:",
+          error
+        );
+
+        setQuestions([]);
+      }
+    }
+
+    loadQuestions();
+  }, [
+    subjectId,
+    chapterId,
+    topicId,
+  ]);
+
+  // ==========================================================
+  // SELECT / DESELECT QUESTION
+  // ==========================================================
+
+  function toggleQuestion(
+    questionId: number,
+    checked: boolean
+  ) {
+    if (checked) {
+      setSelectedQuestions(
+        (previous) =>
+          previous.includes(questionId)
+            ? previous
+            : [
+                ...previous,
+                questionId,
+              ]
+      );
+
+      return;
+    }
+
+    setSelectedQuestions(
+      (previous) =>
+        previous.filter(
+          (id) => id !== questionId
+        )
     );
-
-    setQuestions(data);
   }
 
-  loadQuestions();
-}, [subjectId, chapterId, topicId]);
-
-  async function loadChapters() {
-    const data = await getChapters(Number(subjectId));
-    setChapters(data);
-  }
-
-  loadChapters();
-}, [subjectId]);
-
-useEffect(() => {
-  if (!chapterId) {
-    setTopics([]);
-    setTopicId("");
-    return;
-  }
-
-  async function loadTopics() {
-    const data = await getTopicsByChapter(Number(chapterId));
-    setTopics(data);
-  }
-
-  loadTopics();
-}, [chapterId]);
+  // ==========================================================
+  // SAVE TEST
+  // ==========================================================
 
   function handleSave() {
-    console.log({
-      title,
-      exam,
-      subjectId,
-      duration,
-      marks,
-    });
-  
+    console.log(
+      "CREATE TEST",
+      {
+        title,
+        exam,
+        subjectId,
+        chapterId,
+        topicId,
+        duration,
+        marks,
+        selectedQuestions,
+      }
+    );
+
+    /*
+     * Test creation will be connected to the
+     * test service here.
+     *
+     * For now this preserves the existing
+     * Save Draft UI without changing the
+     * working assessment pipeline.
+     */
+
+    setOpen(false);
+  }
+
+  // ==========================================================
+  // UI
+  // ==========================================================
+
   return (
     <Dialog
       open={open}
@@ -118,7 +241,6 @@ useEffect(() => {
       </DialogTrigger>
 
       <DialogContent className="max-w-2xl">
-
         <DialogHeader>
           <DialogTitle>
             Create Test
@@ -126,20 +248,26 @@ useEffect(() => {
         </DialogHeader>
 
         <div className="space-y-5">
+          {/* Test Title */}
 
           <div>
-            <Label>
+            <Label htmlFor="test-title">
               Test Title
             </Label>
 
             <Input
+              id="test-title"
               value={title}
-              onChange={(e) =>
-                setTitle(e.target.value)
+              onChange={(event) =>
+                setTitle(
+                  event.target.value
+                )
               }
               placeholder="NEET Physics Mock Test 1"
             />
           </div>
+
+          {/* Exam */}
 
           <EntitySelect
             label="Exam"
@@ -167,122 +295,141 @@ useEffect(() => {
             onChange={setExam}
           />
 
+          {/* Subject */}
+
           <EntitySelect
             label="Subject"
             value={subjectId}
             options={subjects}
             optionLabel="name"
             optionValue="id"
-            onChange={setSubjectId}
+            onChange={(value) => {
+              setSubjectId(value);
+              setChapterId("");
+              setTopicId("");
+              setSelectedQuestions([]);
+            }}
           />
-<EntitySelect
-  label="Chapter"
-  value={chapterId}
-  options={chapters}
-  optionLabel="name"
-  optionValue="id"
-  onChange={setChapterId}
-/>
 
-<EntitySelect
-  label="Topic"
-  value={topicId}
-  options={topics}
-  optionLabel="name"
-  optionValue="id"
-  onChange={setTopicId}
-/>
-<div className="rounded-lg border p-4">
+          {/* Chapter */}
 
-  <h3 className="mb-3 font-semibold">
-    Saved Questions
-  </h3>
+          <EntitySelect
+            label="Chapter"
+            value={chapterId}
+            options={chapters}
+            optionLabel="name"
+            optionValue="id"
+            onChange={(value) => {
+              setChapterId(value);
+              setTopicId("");
+              setSelectedQuestions([]);
+            }}
+          />
 
-  <div className="max-h-64 overflow-y-auto space-y-2">
+          {/* Topic */}
 
-    {questions.map((q) => (
+          <EntitySelect
+            label="Topic"
+            value={topicId}
+            options={topics}
+            optionLabel="name"
+            optionValue="id"
+            onChange={(value) => {
+              setTopicId(value);
+              setSelectedQuestions([]);
+            }}
+          />
 
-      <label
-        key={q.id}
-        className="flex items-start gap-3 border-b pb-2"
-      >
+          {/* Saved Questions */}
 
-        <input
-          type="checkbox"
-          checked={selectedQuestions.includes(q.id)}
-          onChange={(e) => {
+          {topicId && (
+            <div>
+              <Label>
+                Saved Questions
+              </Label>
 
-            if (e.target.checked) {
+              <div className="mt-2 max-h-64 overflow-y-auto rounded-lg border">
+                {questions.length === 0 ? (
+                  <div className="p-4 text-sm text-slate-500">
+                    No saved questions found
+                    for this topic.
+                  </div>
+                ) : (
+                  <div className="divide-y">
+                    {questions.map(
+                      (question) => (
+                        <label
+                          key={question.id}
+                          className="flex cursor-pointer items-start gap-3 p-3 hover:bg-slate-50"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedQuestions.includes(
+                              question.id
+                            )}
+                            onChange={(event) =>
+                              toggleQuestion(
+                                question.id,
+                                event.target
+                                  .checked
+                              )
+                            }
+                            className="mt-1"
+                          />
 
-              setSelectedQuestions([
-                ...selectedQuestions,
-                q.id,
-              ]);
+                          <span className="text-sm text-slate-700">
+                            {question.question ??
+                              question.question_text ??
+                              "Question"}
+                          </span>
+                        </label>
+                      )
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
-            } else {
-
-              setSelectedQuestions(
-                selectedQuestions.filter(
-                  (id) => id !== q.id
-                )
-              );
-
-            }
-
-          }}
-        />
-
-        <span>
-          {q.question}
-        </span>
-
-      </label>
-
-    ))}
-
-  </div>
-
-</div>
+          {/* Duration + Marks */}
 
           <div className="grid grid-cols-2 gap-4">
-
             <div>
-
-              <Label>
+              <Label htmlFor="duration">
                 Duration (Minutes)
               </Label>
 
               <Input
+                id="duration"
                 type="number"
                 value={duration}
-                onChange={(e) =>
+                onChange={(event) =>
                   setDuration(
-                    e.target.value
+                    event.target.value
                   )
                 }
               />
-
             </div>
 
             <div>
-
-              <Label>
+              <Label htmlFor="marks">
                 Total Marks
               </Label>
 
               <Input
+                id="marks"
                 type="number"
                 value={marks}
-                onChange={(e) =>
+                onChange={(event) =>
                   setMarks(
-                    e.target.value
+                    event.target.value
                   )
                 }
               />
-
             </div>
-
           </div>
+
+          {/* Save */}
 
           <Button
             className="w-full"
@@ -290,12 +437,8 @@ useEffect(() => {
           >
             Save Draft
           </Button>
-
         </div>
-
       </DialogContent>
-
     </Dialog>
   );
-}
 }

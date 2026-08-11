@@ -1,255 +1,181 @@
-import Image from "next/image";
+"use client";
 
+import Image from "next/image";
+import Link from "next/link";
 import {
+  ArrowRight,
+  BookOpen,
   GraduationCap,
-  UserRound,
   ShieldCheck,
 } from "lucide-react";
 
-export default function Home() {
+const portals = [
+  {
+    title: "Teacher",
+    icon: BookOpen,
+    iconBg: "bg-blue-100",
+    iconColor: "text-blue-600",
+    color: "bg-blue-600",
+    hoverColor: "hover:bg-blue-700",
+    link: "/teacher/login",
+  },
+  {
+    title: "Student",
+    icon: GraduationCap,
+    iconBg: "bg-emerald-100",
+    iconColor: "text-emerald-600",
+    color: "bg-emerald-600",
+    hoverColor: "hover:bg-emerald-700",
+    link: "/student/login",
+  },
+  {
+    title: "Administrator",
+    icon: ShieldCheck,
+    iconBg: "bg-violet-100",
+    iconColor: "text-violet-600",
+    color: "bg-violet-600",
+    hoverColor: "hover:bg-violet-700",
+    link: "/admin/login",
+  },
+];
+
+export default function LandingPage() {
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen bg-gradient-to-b from-[#090D16] via-[#0C1220] to-[#090D16] text-white flex flex-col">
+{/* ================= Navbar ================= */}
 
-      {/* ================= Navigation ================= */}
+<nav className="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
+  <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-8">
 
-      <nav className="sticky top-0 z-50 border-b border-slate-200 bg-white/90 backdrop-blur-md">
+    <Link href="/" className="flex items-center">
+  <Image
+    src="/images/leapai-logo.png"
+    alt="LEAP Assessment AI"
+    width={320}
+    height={90}
+    priority
+    className="h-16 w-auto object-contain"
+  />
+</Link>
 
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-8 py-4">
+    {/* Future Navigation */}
+    {/* <div className="flex gap-8">
+      ...
+    </div> */}
 
-         <div>
-  <h1 className="text-3xl font-extrabold text-blue-700">
-    LEAP
-  </h1>
-
-  <p className="-mt-1 text-xs tracking-[5px] text-slate-500">
-    ASSESSMENT AI
-  </p>
-</div>
-          <div className="space-x-6 text-sm font-medium text-slate-600">
-
-            <a
-              href="#features"
-              className="hover:text-blue-700"
-            >
-              Features
-            </a>
-
-            <a
-              href="/contact"
-              className="hover:text-blue-700"
-            >
-              Support
-            </a>
-<a
-  href="/assessment/create"
-  className="rounded-full bg-slate-900 px-5 py-2 text-white hover:bg-slate-800"
->
-  Get Started
-</a>
-          </div>
-
-        </div>
-
-      </nav>
-
+  </div>
+</nav>
       {/* ================= Hero ================= */}
+      <section className="py-14 lg:py-20">
+        <div className="mx-auto max-w-7xl px-8">
 
-      <section className="bg-gradient-to-br from-blue-900 via-indigo-900 to-slate-900 text-white">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
 
-        <div className="mx-auto grid max-w-7xl items-center gap-10 px-8 py-12 lg:grid-cols-2">
+            {/* Left */}
+            <div className="space-y-8">
 
-          {/* Left */}
+              <h1 className="text-5xl lg:text-6xl font-black leading-tight tracking-tight">
+                <span className="text-blue-500">LEAP</span>
+                <br />
+                Assessment AI
+              </h1>
 
-          <div>
-<p className="mb-4 text-sm font-semibold uppercase tracking-[4px] text-blue-300">
-  AI • ASSESSMENT • ANALYTICS • LEARNING
-</p>
-            <h1 className="text-4xl font-extrabold leading-tight tracking-tight md:text-5xl">
+              <h2 className="text-2xl font-semibold text-blue-400">
+                AI-Powered NEET • JEE • CBSE Assessment Platform
+              </h2>
 
-              LEAP AI Assessment
+              <p className="text-lg text-slate-300">
+                Create • Assess • Analyze • Improve
+              </p>
 
-              <span className="block text-blue-300">
-                JEE • NEET • CBSE
-              </span>
+            </div>
 
-            </h1>
-
-            <p className="mt-5 text-xl font-medium text-blue-200">
-
-              AI-Powered Assessment Platform
-
-              <br />
-
-              for Schools, Teachers and Students
-
-            </p>
-
-            <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-300">
-
-              Create intelligent assessments, generate AI-powered
-              questions, build smart repositories and deliver
-              meaningful learning analytics—all from one unified
-              platform.
-
-            </p>
-<div className="mt-8 flex flex-wrap gap-8">
-
-  <div>
-    <h2 className="text-3xl font-bold text-white">
-      AI
-    </h2>
-    <p className="text-blue-200">
-      Question Generator
-    </p>
-  </div>
-
-  <div>
-    <h2 className="text-3xl font-bold text-white">
-      24×7
-    </h2>
-    <p className="text-blue-200">
-      Intelligent Platform
-    </p>
-  </div>
-
-  <div>
-    <h2 className="text-3xl font-bold text-white">
-      NEET
-    </h2>
-    <p className="text-blue-200">
-      JEE • CBSE
-    </p>
-  </div>
-
-</div>
-          </div>
-
-          {/* Right */}
-
-          <div className="flex justify-center">
-
-            <Image
-              src="/images/hero-ai.png"
-              alt="LEAP AI Dashboard"
-              width={650}
-              height={650}
-              priority
-              quality={100}
-              className="w-full max-w-lg rounded-2xl shadow-2xl transition duration-500 hover:scale-105"
-            />
+            {/* Right */}
+            <div className="flex justify-center lg:justify-end">
+              <Image
+                src="/images/hero.png"
+                width={650}
+                height={480}
+                priority
+                alt="LEAP Assessment AI"
+                className="rounded-3xl border border-blue-500/20 shadow-[0_0_60px_rgba(37,99,235,0.20)]"
+              />
+            </div>
 
           </div>
 
         </div>
-
       </section>
-{/* ================= Portal Section ================= */}
 
-<section className="mx-auto max-w-7xl px-8 py-8">
+      {/* ================= Portal Heading ================= */}
+{/* ================= Portal Heading ================= */}
+<section className="-mt-2">
+  <div className="mx-auto max-w-7xl px-8 text-center">
 
-  <div className="mb-8 text-center">
-
-    <h2 className="text-3xl font-bold text-slate-900">
+    <h2 className="text-3xl font-bold">
       Choose Your Portal
     </h2>
 
-    <p className="mt-2 text-slate-600">
-      Select your role to continue.
-    </p>
+    <div className="mx-auto mt-3 mb-10 h-1 w-24 rounded-full bg-blue-500"></div>
 
   </div>
-
-  <div className="mx-auto grid max-w-4xl gap-6 md:grid-cols-3">
-
-    {/* ================= School ================= */}
-
-    <a
-      href="/school"
-      className="rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm transition-all duration-300 hover:-translate-y-2 hover:border-violet-500 hover:shadow-xl"
-    >
-
-      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-violet-100">
-
-        <ShieldCheck
-          size={34}
-          className="text-violet-700"
-        />
-
-      </div>
-
-      <h3 className="mt-4 text-xl font-bold text-slate-900">
-        School
-      </h3>
-
-      <p className="mt-2 text-sm text-slate-500">
-        Manage Institution
-      </p>
-
-    </a>
-
-    {/* ================= Teacher ================= */}
-
-    <a
-      href="/teacher"
-      className="rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm transition-all duration-300 hover:-translate-y-2 hover:border-blue-500 hover:shadow-xl"
-    >
-
-      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-blue-100">
-
-        <GraduationCap
-          size={34}
-          className="text-blue-700"
-        />
-
-      </div>
-
-      <h3 className="mt-4 text-xl font-bold text-slate-900">
-        Teacher
-      </h3>
-
-      <p className="mt-2 text-sm text-slate-500">
-        Create Assessments
-      </p>
-
-    </a>
-
-    {/* ================= Student ================= */}
-
-    <a
-      href="/student"
-      className="rounded-2xl border border-slate-200 bg-white p-6 text-center shadow-sm transition-all duration-300 hover:-translate-y-2 hover:border-green-500 hover:shadow-xl"
-    >
-
-      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
-
-        <UserRound
-          size={34}
-          className="text-green-700"
-        />
-
-      </div>
-
-      <h3 className="mt-4 text-xl font-bold text-slate-900">
-        Student
-      </h3>
-
-      <p className="mt-2 text-sm text-slate-500">
-        Take Assessments
-      </p>
-
-    </a>
-
-  </div>
-<footer className="mt-12 border-t py-8">
-
-  <p className="text-center text-sm text-slate-500">
-    © 2026 LEAP Assessment AI
-    <br />
-    Empowering Teachers • Inspiring Students • Enabling Schools
-  </p>
-
-</footer>
 </section>
-</main>
+
+      {/* ================= Portal Cards ================= */}
+      <section className="pb-20">
+        <div className="mx-auto max-w-7xl px-8">
+
+          <div className="grid gap-8 md:grid-cols-3">
+
+            {portals.map((portal) => (
+              <div
+                key={portal.title}
+                className="rounded-3xl bg-white p-8 text-center text-slate-900 shadow-xl transition-all duration-300 hover:-translate-y-3 hover:shadow-[0_20px_50px_rgba(37,99,235,0.25)]"
+              >
+
+                <div
+                  className={`mx-auto mb-8 flex h-24 w-24 items-center justify-center rounded-full ${portal.iconBg}`}
+                >
+                  <portal.icon
+                    className={`h-12 w-12 ${portal.iconColor}`}
+                  />
+                </div>
+
+                <h3 className="mb-8 text-3xl font-bold">
+                  {portal.title}
+                </h3>
+
+                <Link
+                  href={portal.link}
+                  className={`flex items-center justify-center gap-2 rounded-xl py-3.5 font-semibold text-white transition-all duration-300 ${portal.color} ${portal.hoverColor}`}
+                >
+                  Open Portal
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+
+              </div>
+            ))}
+
+          </div>
+
+        </div>
+      </section>
+
+      {/* ================= Footer ================= */}
+      <footer className="mt-auto border-t border-slate-800 py-6">
+        <div className="mx-auto max-w-7xl px-8 flex flex-col md:flex-row items-center justify-between text-sm text-slate-500">
+
+          <p>
+            © {new Date().getFullYear()} LEAP Assessment AI. All Rights Reserved.
+          </p>
+
+          <p className="mt-2 md:mt-0">
+            Version 1.0 • PSG Public Schools
+          </p>
+
+        </div>
+      </footer>
+
+    </main>
   );
 }

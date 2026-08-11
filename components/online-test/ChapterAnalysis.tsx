@@ -1,3 +1,5 @@
+"use client";
+
 interface Props {
   attempt: any;
 }
@@ -5,7 +7,6 @@ interface Props {
 export default function ChapterAnalysis({
   attempt,
 }: Props) {
-
   const analysis = new Map<
     string,
     {
@@ -16,10 +17,18 @@ export default function ChapterAnalysis({
     }
   >();
 
-  attempt.tests.test_questions.forEach((q: any) => {
+  const testQuestions =
+    attempt?.tests?.test_questions ?? [];
+
+  testQuestions.forEach((q: any) => {
+    const question = q.questions;
+
+    if (!question) {
+      return;
+    }
 
     const chapter =
-      q.questions?.chapters?.name ??
+      question.chapters?.name ??
       "Unknown Chapter";
 
     if (!analysis.has(chapter)) {
@@ -35,101 +44,100 @@ export default function ChapterAnalysis({
 
     item.total++;
 
-    const answer = q.student_answer;
+    /*
+     * student_answers belongs to the question.
+     * We need the answer belonging to this attempt.
+     */
+    const answers =
+      question.student_answers ?? [];
 
-    if (!answer) {
+    const answer = answers.find(
+      (a: any) =>
+        Number(a.attempt_id) ===
+        Number(attempt.id)
+    );
+
+    if (!answer || !answer.selected_answer) {
       item.skipped++;
-    } else if (
-      answer.selected_answer ===
-      q.questions.correct_answer
-    ) {
+    } else if (answer.is_correct === true) {
       item.correct++;
     } else {
       item.wrong++;
     }
-
   });
 
   return (
-    <div className="mt-8 rounded-2xl border bg-white p-8 shadow">
-
+    <div>
       <h2 className="mb-6 text-2xl font-bold">
         Chapter-wise Analysis
       </h2>
 
-      <div className="overflow-x-auto">
+      {analysis.size === 0 ? (
+        <div className="rounded-xl border bg-slate-50 p-6 text-center text-slate-500">
+          No chapter analysis available.
+        </div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="border-b bg-slate-100">
+                <th className="p-3 text-left">
+                  Chapter
+                </th>
 
-        <table className="w-full border-collapse">
+                <th className="p-3 text-center">
+                  Total
+                </th>
 
-          <thead>
+                <th className="p-3 text-center">
+                  Correct
+                </th>
 
-            <tr className="border-b bg-slate-100">
+                <th className="p-3 text-center">
+                  Wrong
+                </th>
 
-              <th className="p-3 text-left">
-                Chapter
-              </th>
+                <th className="p-3 text-center">
+                  Skipped
+                </th>
+              </tr>
+            </thead>
 
-              <th className="p-3 text-center">
-                Total
-              </th>
+            <tbody>
+              {Array.from(
+                analysis.entries()
+              ).map(
+                ([chapter, stats]) => (
+                  <tr
+                    key={chapter}
+                    className="border-b hover:bg-slate-50"
+                  >
+                    <td className="p-3 font-medium">
+                      {chapter}
+                    </td>
 
-              <th className="p-3 text-center">
-                Correct
-              </th>
+                    <td className="p-3 text-center">
+                      {stats.total}
+                    </td>
 
-              <th className="p-3 text-center">
-                Wrong
-              </th>
+                    <td className="p-3 text-center font-semibold text-green-600">
+                      {stats.correct}
+                    </td>
 
-              <th className="p-3 text-center">
-                Skipped
-              </th>
+                    <td className="p-3 text-center font-semibold text-red-600">
+                      {stats.wrong}
+                    </td>
 
-            </tr>
-
-          </thead>
-
-          <tbody>
-
-            {Array.from(analysis.entries()).map(
-              ([chapter, stats]) => (
-
-                <tr
-                  key={chapter}
-                  className="border-b hover:bg-slate-50"
-                >
-
-                  <td className="p-3">
-                    {chapter}
-                  </td>
-
-                  <td className="p-3 text-center">
-                    {stats.total}
-                  </td>
-
-                  <td className="p-3 text-center text-green-600 font-semibold">
-                    {stats.correct}
-                  </td>
-
-                  <td className="p-3 text-center text-red-600 font-semibold">
-                    {stats.wrong}
-                  </td>
-
-                  <td className="p-3 text-center text-yellow-600 font-semibold">
-                    {stats.skipped}
-                  </td>
-
-                </tr>
-
-              )
-            )}
-
-          </tbody>
-
-        </table>
-
-      </div>
-
+                    <td className="p-3 text-center font-semibold text-yellow-600">
+                      {stats.skipped}
+                    </td>
+                  </tr>
+                )
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

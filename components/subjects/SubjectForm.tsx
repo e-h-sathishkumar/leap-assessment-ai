@@ -3,9 +3,9 @@
 import { useState } from "react";
 
 import {
-  createSubjectAction,
-  updateSubjectAction,
-} from "@/app/repository/subjects/actions";
+  createSubject,
+  updateSubject,
+} from "@/services/subject.service";
 
 import type { Subject } from "@/types/subject";
 
@@ -29,33 +29,100 @@ export default function SubjectForm({
 }: SubjectFormProps) {
   const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(formData: FormData) {
-    setLoading(true);
+  async function handleSubmit(
+    event: React.FormEvent<HTMLFormElement>
+  ) {
+    event.preventDefault();
 
-    const result =
-      mode === "create"
-        ? await createSubjectAction(formData)
-        : await updateSubjectAction(
-            subject!.id!,
-            formData
+    try {
+      setLoading(true);
+
+      const formData = new FormData(
+        event.currentTarget
+      );
+
+      const name =
+        String(
+          formData.get("name") ?? ""
+        ).trim();
+
+      const code =
+        String(
+          formData.get("code") ?? ""
+        ).trim();
+
+      const description =
+        String(
+          formData.get("description") ?? ""
+        ).trim();
+
+      if (!name) {
+        toast.error(
+          "Subject name is required."
+        );
+        return;
+      }
+
+      if (!code) {
+        toast.error(
+          "Subject code is required."
+        );
+        return;
+      }
+
+      if (mode === "create") {
+        await createSubject({
+          name,
+          code,
+          description,
+        } as Subject);
+
+        toast.success(
+          "Subject created successfully."
+        );
+      } else {
+        if (!subject?.id) {
+          toast.error(
+            "Invalid subject."
           );
+          return;
+        }
 
-    setLoading(false);
+        await updateSubject(
+          subject.id,
+          {
+            name,
+            code,
+            description,
+          }
+        );
 
-    if (!result.success) {
-      toast.error(result.message);
-      return;
+        toast.success(
+          "Subject updated successfully."
+        );
+      }
+
+      onSuccess?.();
+    } catch (error) {
+      console.error(
+        "SUBJECT SAVE ERROR:",
+        error
+      );
+
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Unable to save subject."
+      );
+    } finally {
+      setLoading(false);
     }
-
-    toast.success(result.message);
-
-    onSuccess?.();
   }
 
   return (
     <form
-      action={handleSubmit}
-      className="space-y-4"
+      onSubmit={handleSubmit}
+      className="space-y-5"
     >
       <div>
         <Label htmlFor="name">
@@ -65,7 +132,7 @@ export default function SubjectForm({
         <Input
           id="name"
           name="name"
-          defaultValue={subject?.name}
+          defaultValue={subject?.name ?? ""}
           placeholder="Physics"
           required
         />
@@ -79,7 +146,7 @@ export default function SubjectForm({
         <Input
           id="code"
           name="code"
-          defaultValue={subject?.code}
+          defaultValue={subject?.code ?? ""}
           placeholder="PHY"
           required
         />
@@ -93,7 +160,9 @@ export default function SubjectForm({
         <Textarea
           id="description"
           name="description"
-          defaultValue={subject?.description}
+          defaultValue={
+            subject?.description ?? ""
+          }
           placeholder="Optional description"
         />
       </div>
@@ -108,8 +177,8 @@ export default function SubjectForm({
             ? "Saving..."
             : "Updating..."
           : mode === "create"
-          ? "Save Subject"
-          : "Update Subject"}
+            ? "Save Subject"
+            : "Update Subject"}
       </Button>
     </form>
   );

@@ -24,7 +24,12 @@ export default function AttemptWorkspace({
 }: Props) {
   const router = useRouter();
 
-  const questions = attempt.tests.test_questions ?? [];
+  const questions =
+    attempt?.tests?.test_questions ?? [];
+
+  // =====================================================
+  // STATE
+  // =====================================================
 
   const [currentQuestion, setCurrentQuestion] =
     useState(0);
@@ -38,144 +43,257 @@ export default function AttemptWorkspace({
   const [reviewQuestions, setReviewQuestions] =
     useState<Set<number>>(new Set());
 
-  // ----------------------------------------------------
-  // Load Saved Answers
-  // ----------------------------------------------------
+  const [submitting, setSubmitting] =
+    useState(false);
 
- useEffect(() => {
-  async function loadAnswers() {
-    try {
-      console.log("Loading answers for attempt:", attempt.id);
-
-      const saved = await getAnswersByAttempt(attempt.id);
-
-      console.log("Loaded Answers:", saved);
-
-      const map: Record<number, string> = {};
-      const reviewSet = new Set<number>();
-
-      saved.forEach((answer: any) => {
-        if (answer.selected_answer) {
-          map[answer.question_id] = answer.selected_answer;
-        }
-
-        if (answer.marked_for_review) {
-          reviewSet.add(answer.question_id);
-        }
-      });
-
-      setAnswers(map);
-      setReviewQuestions(reviewSet);
-    } catch (error) {
-      console.error("Load Answers Error:", error);
-    }
-  }
-
-  loadAnswers();
-}, [attempt.id]);
-
-  // ----------------------------------------------------
-  // Track Visited Questions
-  // ----------------------------------------------------
+  // =====================================================
+  // LOAD SAVED ANSWERS
+  // =====================================================
 
   useEffect(() => {
-    if (!questions.length) return;
+    async function loadAnswers() {
+      try {
+        console.log(
+          "========================================"
+        );
+
+        console.log(
+          "LOADING ANSWERS"
+        );
+
+        console.log(
+          "Attempt ID:",
+          attempt.id
+        );
+
+        console.log(
+          "========================================"
+        );
+
+        const saved =
+          await getAnswersByAttempt(
+            attempt.id
+          );
+
+        console.log(
+          "Loaded Answers:",
+          saved
+        );
+
+        const answerMap: Record<
+          number,
+          string
+        > = {};
+
+        const reviewSet =
+          new Set<number>();
+
+        saved.forEach(
+          (answer: any) => {
+            const questionId =
+              Number(
+                answer.question_id
+              );
+
+            if (
+              answer.selected_answer
+            ) {
+              answerMap[
+                questionId
+              ] =
+                answer.selected_answer;
+            }
+
+            if (
+              answer.marked_for_review
+            ) {
+              reviewSet.add(
+                questionId
+              );
+            }
+          }
+        );
+
+        setAnswers(
+          answerMap
+        );
+
+        setReviewQuestions(
+          reviewSet
+        );
+
+      } catch (error) {
+        console.error(
+          "LOAD ANSWERS ERROR:",
+          error
+        );
+      }
+    }
+
+    loadAnswers();
+  }, [attempt.id]);
+
+  // =====================================================
+  // TRACK VISITED QUESTIONS
+  // =====================================================
+
+  useEffect(() => {
+    if (!questions.length) {
+      return;
+    }
 
     const questionId =
-      questions[currentQuestion]?.questions?.id;
+      questions[
+        currentQuestion
+      ]?.questions?.id;
 
-    if (!questionId) return;
+    if (!questionId) {
+      return;
+    }
 
-    setVisitedQuestions((prev) => {
-      const updated = new Set(prev);
-      updated.add(questionId);
-      return updated;
-    });
-  }, [currentQuestion, questions]);
+    setVisitedQuestions(
+      (previous) => {
+        const updated =
+          new Set(previous);
 
+        updated.add(
+          Number(questionId)
+        );
 
+        return updated;
+      }
+    );
+  }, [
+    currentQuestion,
+    questions,
+  ]);
 
-// ----------------------------------------------------
-// Save Answer
-// ----------------------------------------------------// ----------------------------------------------------
-// Save Answer
-// ----------------------------------------------------
+  // =====================================================
+  // SAVE ANSWER
+  // =====================================================
 
-async function handleSaveAnswer(
-  questionId: number,
-  selectedAnswer: string
-) {
-  console.group("SAVE ANSWER");
+  async function handleSaveAnswer(
+    questionId: number,
+    selectedAnswer: string
+  ) {
+    console.log(
+      "========================================"
+    );
 
-  console.log("Attempt ID:", attempt.id);
-  console.log("Question ID:", questionId);
-  console.log("Selected Answer:", selectedAnswer);
+    console.log(
+      "SAVE ANSWER"
+    );
 
-  try {
-    const result = await saveAnswer(
-      attempt.id,
-      questionId,
+    console.log(
+      "Attempt ID:",
+      attempt.id
+    );
+
+    console.log(
+      "Question ID:",
+      questionId
+    );
+
+    console.log(
+      "Selected Answer:",
       selectedAnswer
     );
 
-    console.log("Supabase Response:", result);
+    console.log(
+      "========================================"
+    );
 
-    setAnswers((prev) => ({
-      ...prev,
-      [questionId]: selectedAnswer,
-    }));
-  } catch (error) {
-    console.error("SAVE FAILED");
-    console.error(error);
+    try {
+      const result =
+        await saveAnswer(
+          attempt.id,
+          questionId,
+          selectedAnswer
+        );
 
-    if (
-      typeof error === "object" &&
-      error !== null
-    ) {
-      console.log(JSON.stringify(error, null, 2));
+      console.log(
+        "Supabase Response:",
+        result
+      );
+
+      setAnswers(
+        (previous) => ({
+          ...previous,
+
+          [questionId]:
+            selectedAnswer,
+        })
+      );
+
+    } catch (error) {
+      console.error(
+        "SAVE ANSWER ERROR:",
+        error
+      );
+
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Unable to save answer."
+      );
     }
   }
 
-  console.groupEnd();
-}
-// ----------------------------------------------------
-// Toggle Review
-// ----------------------------------------------------
+  // =====================================================
+  // MARK FOR REVIEW
+  // =====================================================
 
-async function toggleReview(
-  questionId: number
-) {
-  const isMarked =
-    reviewQuestions.has(questionId);
+  async function toggleReview(
+    questionId: number
+  ) {
+    const isMarked =
+      reviewQuestions.has(
+        questionId
+      );
 
-  try {
-    await markForReview(
-      attempt.id,
-      questionId,
-      !isMarked
-    );
+    try {
+      await markForReview(
+        attempt.id,
+        questionId,
+        !isMarked
+      );
 
-    setReviewQuestions((prev) => {
-      const updated = new Set(prev);
+      setReviewQuestions(
+        (previous) => {
+          const updated =
+            new Set(previous);
 
-      if (isMarked) {
-        updated.delete(questionId);
-      } else {
-        updated.add(questionId);
-      }
+          if (isMarked) {
+            updated.delete(
+              questionId
+            );
+          } else {
+            updated.add(
+              questionId
+            );
+          }
 
-      return updated;
-    });
-  } catch (error) {
-    console.error(
-      "Failed to mark question for review:",
-      error
-    );
+          return updated;
+        }
+      );
+
+    } catch (error) {
+      console.error(
+        "MARK REVIEW ERROR:",
+        error
+      );
+
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Unable to update review status."
+      );
+    }
   }
-}
-  // ----------------------------------------------------
-  // Clear Answer
-  // ----------------------------------------------------
+
+  // =====================================================
+  // CLEAR ANSWER
+  // =====================================================
 
   async function handleClearAnswer(
     questionId: number
@@ -186,50 +304,263 @@ async function toggleReview(
         questionId
       );
 
-      setAnswers((prev) => {
-        const updated = { ...prev };
-        delete updated[questionId];
-        return updated;
-      });
-    } catch (error) {
-      console.error(
-        "Failed to clear answer",
-        error
-      );
-    }
-  }
+      setAnswers(
+        (previous) => {
+          const updated = {
+            ...previous,
+          };
 
-  // ----------------------------------------------------
-  // Submit Test
-  // ----------------------------------------------------
+          delete updated[
+            questionId
+          ];
 
-  async function handleSubmitTest() {
-    try {
-      const response = await fetch(
-        `/api/test-attempts/${attempt.id}/submit`,
-        {
-          method: "POST",
+          return updated;
         }
       );
 
-      if (!response.ok) {
-        throw new Error(
-          "Failed to submit test."
-        );
-      }
-const testId = attempt.tests.id;
-
-router.push(
-  `/online-test/${testId}/result/${attempt.id}`
-);
-
     } catch (error) {
-      console.error(error);
-      alert("Unable to submit the test.");
+      console.error(
+        "CLEAR ANSWER ERROR:",
+        error
+      );
+
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Unable to clear answer."
+      );
     }
   }
 
-  // ----------------------------------------------------
+  // =====================================================
+  // SUBMIT TEST
+  // =====================================================
+
+  async function handleSubmitTest() {
+    if (submitting) {
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+
+      console.log(
+        "========================================"
+      );
+
+      console.log(
+        "SUBMIT TEST STARTED"
+      );
+
+      console.log(
+        "Attempt ID:",
+        attempt.id
+      );
+
+      console.log(
+        "Test ID:",
+        attempt.tests.id
+      );
+
+      console.log(
+        "========================================"
+      );
+
+      const response =
+        await fetch(
+          `/api/test-attempts/${attempt.id}/submit`,
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+          }
+        );
+
+      // =================================================
+      // READ RAW RESPONSE
+      // =================================================
+
+      const responseText =
+        await response.text();
+
+      console.log(
+        "SUBMIT HTTP STATUS:",
+        response.status
+      );
+
+      console.log(
+        "SUBMIT RAW RESPONSE:",
+        responseText
+      );
+
+      // =================================================
+      // PARSE RESPONSE
+      // =================================================
+
+      let data: any = null;
+
+      try {
+        data =
+          responseText
+            ? JSON.parse(
+                responseText
+              )
+            : null;
+
+      } catch (parseError) {
+        console.error(
+          "SUBMIT RESPONSE JSON PARSE ERROR:",
+          parseError
+        );
+      }
+
+      console.log(
+        "SUBMIT PARSED RESPONSE:",
+        data
+      );
+
+      // =================================================
+      // HANDLE HTTP ERROR
+      // =================================================
+
+      if (!response.ok) {
+        const apiError =
+          data?.details?.message ||
+          data?.details?.error_description ||
+          data?.message ||
+          data?.error ||
+          responseText ||
+          `Submission failed with HTTP ${response.status}.`;
+
+        console.error(
+          "========================================"
+        );
+
+        console.error(
+          "SUBMIT TEST FAILED"
+        );
+
+        console.error(
+          "HTTP STATUS:",
+          response.status
+        );
+
+        console.error(
+          "API ERROR CODE:",
+          data?.details?.code
+        );
+
+        console.error(
+          "ACTUAL API ERROR:",
+          apiError
+        );
+
+        console.error(
+          "FULL API RESPONSE:",
+          data
+        );
+
+        console.error(
+          "========================================"
+        );
+
+        throw new Error(
+          String(apiError)
+        );
+      }
+
+      // =================================================
+      // HANDLE APPLICATION ERROR
+      // =================================================
+
+      if (
+        data &&
+        data.success === false
+      ) {
+        const apiError =
+          data?.details?.message ||
+          data?.message ||
+          data?.error ||
+          "Test submission was not completed.";
+
+        throw new Error(
+          String(apiError)
+        );
+      }
+
+      // =================================================
+      // SUCCESS
+      // =================================================
+
+      console.log(
+        "========================================"
+      );
+
+      console.log(
+        "TEST SUBMITTED SUCCESSFULLY"
+      );
+
+      console.log(
+        "SUBMISSION RESULT:",
+        data
+      );
+
+      console.log(
+        "========================================"
+      );
+
+      const testId =
+        attempt.tests.id;
+
+      const attemptId =
+        attempt.id;
+
+      const resultUrl =
+        `/online-test/${testId}/result/${attemptId}`;
+
+      console.log(
+        "RESULT URL:",
+        resultUrl
+      );
+
+      router.push(
+        resultUrl
+      );
+
+    } catch (error) {
+      console.error(
+        "========================================"
+      );
+
+      console.error(
+        "FINAL SUBMISSION ERROR"
+      );
+
+      console.error(
+        error
+      );
+
+      console.error(
+        "========================================"
+      );
+
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Unable to submit the test.";
+
+      alert(message);
+
+      setSubmitting(false);
+    }
+  }
+
+  // =====================================================
+  // NO QUESTIONS
+  // =====================================================
 
   if (!questions.length) {
     return (
@@ -239,39 +570,69 @@ router.push(
     );
   }
 
+  // =====================================================
+  // CURRENT QUESTION
+  // =====================================================
+
   const current =
-    questions[currentQuestion];
+    questions[
+      currentQuestion
+    ];
 
   const currentQuestionId =
-    current.questions.id;
+    Number(
+      current?.questions?.id
+    );
+
+  // =====================================================
+  // PAGE
+  // =====================================================
 
   return (
     <div className="min-h-screen bg-slate-100">
 
+      {/* =================================================
+          HEADER
+      ================================================= */}
+
       <AttemptHeader
         attempt={attempt}
-        onTimeUp={handleSubmitTest}
+        onTimeUp={
+          handleSubmitTest
+        }
       />
+
+      {/* =================================================
+          MAIN CONTENT
+      ================================================= */}
 
       <div className="mx-auto max-w-7xl p-6">
 
         <div className="grid grid-cols-12 gap-6">
 
-          {/* Question */}
+          {/* =============================================
+              QUESTION AREA
+          ============================================= */}
 
           <div className="col-span-9">
 
             <QuestionCard
               question={current}
+
               answer={
-                answers[currentQuestionId]
+                answers[
+                  currentQuestionId
+                ]
               }
+
               onSaveAnswer={
                 handleSaveAnswer
               }
+
               onClearAnswer={
                 handleClearAnswer
               }
+
               onMarkForReview={
                 toggleReview
               }
@@ -279,22 +640,33 @@ router.push(
 
           </div>
 
-          {/* Palette */}
+          {/* =============================================
+              QUESTION PALETTE
+          ============================================= */}
 
           <div className="col-span-3">
 
             <QuestionPalette
-              questions={questions}
+              questions={
+                questions
+              }
+
               currentQuestion={
                 currentQuestion
               }
+
               setCurrentQuestion={
                 setCurrentQuestion
               }
-              answers={answers}
+
+              answers={
+                answers
+              }
+
               visitedQuestions={
                 visitedQuestions
               }
+
               reviewQuestions={
                 reviewQuestions
               }
@@ -304,37 +676,56 @@ router.push(
 
         </div>
 
-        {/* Navigation */}
+        {/* ===============================================
+            NAVIGATION
+        =============================================== */}
 
         <NavigationBar
+
           currentQuestion={
             currentQuestion
           }
+
           totalQuestions={
             questions.length
           }
+
           onPrevious={() =>
-            setCurrentQuestion((p) =>
-              Math.max(0, p - 1)
+            setCurrentQuestion(
+              (previous) =>
+                Math.max(
+                  0,
+                  previous - 1
+                )
             )
           }
+
           onNext={() =>
-            setCurrentQuestion((p) =>
-              Math.min(
-                questions.length - 1,
-                p + 1
-              )
+            setCurrentQuestion(
+              (previous) =>
+                Math.min(
+                  questions.length - 1,
+                  previous + 1
+                )
             )
           }
+
           onMarkForReview={() =>
-            toggleReview(currentQuestionId)
+            toggleReview(
+              currentQuestionId
+            )
           }
+
           onClearResponse={() =>
             handleClearAnswer(
               currentQuestionId
             )
           }
-          onSubmit={handleSubmitTest}
+
+          onSubmit={
+            handleSubmitTest
+          }
+
         />
 
       </div>
