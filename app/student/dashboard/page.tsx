@@ -1,4 +1,4 @@
-﻿import { getStudentDashboardData } from "@/services/student-dashboard.service";
+import { getStudentDashboardData } from "@/services/student-dashboard.service";
 import LogoutButton from "@/components/auth/LogoutButton";
 import Link from "next/link";
 
@@ -531,7 +531,7 @@ export default async function StudentDashboardPage() {
                 (attempt) => (
 
                   <div
-                    key={attempt.id}
+                    key={attempt.attemptId}
                     className="rounded-xl border bg-white p-5 shadow-sm"
                   >
 
@@ -600,7 +600,7 @@ export default async function StudentDashboardPage() {
                     </div>
 
                     <Link
-                      href={`/online-test/${attempt.testId}/result/${attempt.id}`}
+                      href={`/online-test/${attempt.testId}/result/${attempt.attemptId}`}
                       className="mt-5 inline-flex rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
                     >
                       View Result
@@ -695,7 +695,7 @@ export default async function StudentDashboardPage() {
                       (attempt: any) => (
 
                         <tr
-                          key={attempt.id}
+                          key={attempt.attemptId}
                           className="border-t"
                         >
 
