@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { submitAttempt } from "@/services/test.service";
+import { submitAttempt } from "@/services/test-submit.service";
 
 interface RouteContext {
   params: Promise<{

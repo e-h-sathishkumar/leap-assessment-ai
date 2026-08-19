@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+﻿import { supabase } from "@/lib/supabase";
 import { saveQuestions } from "@/services/question/question.service";
 import type {
   Test,
@@ -200,7 +200,7 @@ export async function createTestWithQuestions(
     throw testError;
   }
 
-  console.log("✅ Test Created :", test.id);
+  console.log("âœ… Test Created :", test.id);
 
   // STEP 2 : Save Questions
 
@@ -214,7 +214,7 @@ export async function createTestWithQuestions(
   }
 
   console.log(
-    `✅ ${savedQuestions.length} Questions Saved`
+    `âœ… ${savedQuestions.length} Questions Saved`
   );
 
   // STEP 3 : Link Questions
@@ -224,7 +224,7 @@ export async function createTestWithQuestions(
     savedQuestions
   );
 
-  console.log("✅ Questions Linked To Test");
+  console.log("âœ… Questions Linked To Test");
 
   return test;
 }
@@ -425,117 +425,46 @@ export async function createTestAttempt(
 export async function getAttemptById(
   attemptId: string
 ) {
-  const { data, error } = await supabase
-    .from("test_attempts")
-    .select(`
-      *,
-      tests(
-        *,
-        test_questions(
-          question_order,
-          marks,
-          negative_marks,
-          questions(
-  *,
-  chapters(
-    id,
-    name
-  ),
-  student_answers(*)
-)
-        )
-      )
-    `)
-    .eq("id", attemptId)
-    .single();
+  // -----------------------------------------------------
+  // VALIDATE ATTEMPT ID
+  // -----------------------------------------------------
 
-  if (error) throw error;
+  const numericAttemptId = Number(attemptId);
 
-  data.tests.test_questions.sort(
-    (a: any, b: any) =>
-      a.question_order - b.question_order
-  );
-
-  let correct = 0;
-  let wrong = 0;
-  let skipped = 0;
-
-  data.tests.test_questions.forEach((tq: any) => {
-    const answer = tq.questions.student_answers.find(
-      (a: any) => a.attempt_id === Number(attemptId)
-    );
-
-    if (!answer || !answer.selected_answer) {
-      skipped++;
-    } else if (answer.is_correct) {
-      correct++;
-    } else {
-      wrong++;
-    }
-  });
-
-  const attempted = correct + wrong;
-
-  const accuracy =
-    attempted > 0
-      ? Number(
-          ((correct / attempted) * 100).toFixed(2)
-        )
-      : 0;
-
-  return {
-    ...data,
-    correct,
-    wrong,
-    skipped,
-    attempted,
-    accuracy,
-  };
-}
-// =====================================================
-// GET STUDENT TEST ATTEMPTS
-// =====================================================
-
-export async function getStudentTestAttempts(
-  studentId: string
-) {
-  const { data, error } = await supabase
-    .from("test_attempts")
-    .select(`
-      id,
-      test_id,
-      student_id,
-      started_at,
-      submitted_at,
-      status,
-      score,
-      percentage,
-      accuracy,
-      correct,
-      wrong,
-      skipped,
-      attempted
-    `)
-    .eq("student_id", studentId)
-    .order("started_at", {
-      ascending: false,
-    });
-
-  if (error) {
+  if (
+    !Number.isInteger(numericAttemptId) ||
+    numericAttemptId <= 0
+  ) {
     console.error(
-      "GET STUDENT ATTEMPTS ERROR:",
-      error
+      "INVALID ATTEMPT ID:",
+      attemptId
     );
 
-    throw error;
+    return null;
   }
 
-  return data ?? [];
-}
-export async function submitAttempt(
-  attemptId: number
-) {
+  console.log(
+    "========================================"
+  );
+
+  console.log(
+    "GET ATTEMPT BY ID"
+  );
+
+  console.log(
+    "Attempt ID:",
+    numericAttemptId
+  );
+
+  console.log(
+    "========================================"
+  );
+
   // -----------------------------------------------------
+  // IMPORTANT
+  // Use the authenticated server Supabase client.
+  //
+// -----------------------------------------------------
   // LOAD ATTEMPT
   // -----------------------------------------------------
 
@@ -544,33 +473,126 @@ export async function submitAttempt(
     error: attemptError,
   } = await supabase
     .from("test_attempts")
-    .select(`
-      *,
-      tests (
-        id,
-        total_questions,
-        test_questions (
-          id,
-          marks,
-          negative_marks,
-          questions (
-            id,
-            correct_answer
-          )
-        )
-      )
-    `)
-    .eq("id", attemptId)
-    .single();
+    .select("*")
+    .eq("id", numericAttemptId)
+    .maybeSingle();
 
   if (attemptError) {
+    console.error(
+      "LOAD ATTEMPT ERROR:",
+      attemptError
+    );
+
+    console.error(
+      "Code:",
+      attemptError.code
+    );
+
+    console.error(
+      "Message:",
+      attemptError.message
+    );
+
+    console.error(
+      "Details:",
+      attemptError.details
+    );
+
+    console.error(
+      "Hint:",
+      attemptError.hint
+    );
+
     throw attemptError;
   }
 
   if (!attempt) {
-    throw new Error(
-      "Test attempt was not found."
+    console.error(
+      "ATTEMPT NOT FOUND:",
+      numericAttemptId
     );
+
+    return null;
+  }
+
+  console.log(
+    "ATTEMPT FOUND:",
+    attempt.id
+  );
+
+  // -----------------------------------------------------
+  // LOAD TEST
+  // -----------------------------------------------------
+
+  const {
+    data: test,
+    error: testError,
+  } = await supabase
+    .from("tests")
+    .select("*")
+    .eq("id", Number(attempt.test_id))
+    .maybeSingle();
+
+  if (testError) {
+    console.error(
+      "LOAD TEST ERROR:",
+      testError
+    );
+
+    throw testError;
+  }
+
+  if (!test) {
+    console.error(
+      "TEST NOT FOUND:",
+      attempt.test_id
+    );
+
+    return {
+      ...attempt,
+      tests: null,
+      correct: 0,
+      wrong: 0,
+      skipped: 0,
+      attempted: 0,
+      accuracy: 0,
+    };
+  }
+
+  // -----------------------------------------------------
+  // LOAD TEST QUESTIONS
+  // -----------------------------------------------------
+
+  const {
+    data: testQuestions,
+    error: testQuestionsError,
+  } = await supabase
+    .from("test_questions")
+    .select(`
+      id,
+      question_order,
+      marks,
+      negative_marks,
+      questions (
+        *,
+        chapters (
+          id,
+          name
+        )
+      )
+    `)
+    .eq("test_id", Number(attempt.test_id))
+    .order("question_order", {
+      ascending: true,
+    });
+
+  if (testQuestionsError) {
+    console.error(
+      "LOAD TEST QUESTIONS ERROR:",
+      testQuestionsError
+    );
+
+    throw testQuestionsError;
   }
 
   // -----------------------------------------------------
@@ -578,273 +600,164 @@ export async function submitAttempt(
   // -----------------------------------------------------
 
   const {
-    data: answers,
-    error: answerError,
+    data: studentAnswers,
+    error: studentAnswersError,
   } = await supabase
     .from("student_answers")
     .select("*")
-    .eq("attempt_id", attemptId);
+    .eq("attempt_id", numericAttemptId);
 
-  if (answerError) {
-    throw answerError;
+  if (studentAnswersError) {
+    console.error(
+      "LOAD STUDENT ANSWERS ERROR:",
+      studentAnswersError
+    );
+
+    throw studentAnswersError;
   }
 
   // -----------------------------------------------------
-  // EVALUATE ANSWERS
+  // NORMALIZE QUESTIONS
   // -----------------------------------------------------
 
-  const answerMap = new Map(
-    (answers ?? []).map((answer) => [
-      Number(answer.question_id),
-      answer,
-    ])
-  );
+  const normalizedQuestions =
+    (testQuestions ?? []).map(
+      (testQuestion: any) => {
+        const question =
+          Array.isArray(
+            testQuestion.questions
+          )
+            ? testQuestion.questions[0] ?? null
+            : testQuestion.questions ?? null;
 
-  const updates: Promise<any>[] = [];
+        const chapter =
+          question
+            ? Array.isArray(
+                question.chapters
+              )
+              ? question.chapters[0] ?? null
+              : question.chapters ?? null
+            : null;
 
-  let correct = 0;
-  let wrong = 0;
-  let skipped = 0;
-  let totalScore = 0;
+        return {
+          ...testQuestion,
+
+          questions: question
+            ? {
+                ...question,
+                chapters: chapter,
+                student_answers: [],
+              }
+            : null,
+        };
+      }
+    );
+
+  // -----------------------------------------------------
+  // ATTACH STUDENT ANSWERS
+  // -----------------------------------------------------
+
+  const answers =
+    studentAnswers ?? [];
 
   for (
     const testQuestion of
-    attempt.tests.test_questions
+    normalizedQuestions
   ) {
+    if (
+      !testQuestion.questions
+    ) {
+      continue;
+    }
+
     const questionId =
       Number(
         testQuestion.questions.id
       );
 
-    const answer =
-      answerMap.get(questionId);
+    testQuestion.questions.student_answers =
+      answers.filter(
+        (answer: any) =>
+          Number(
+            answer.question_id
+          ) === questionId
+      );
+  }
 
-    // ---------------------------------------------------
-    // SKIPPED
-    // ---------------------------------------------------
+  // -----------------------------------------------------
+  // CALCULATE RESULT
+  // -----------------------------------------------------
+
+  let correct = 0;
+  let wrong = 0;
+  let skipped = 0;
+
+  for (
+    const testQuestion of
+    normalizedQuestions
+  ) {
+    if (
+      !testQuestion.questions
+    ) {
+      skipped++;
+      continue;
+    }
+
+    const answer =
+      testQuestion.questions.student_answers?.find(
+        (studentAnswer: any) =>
+          Number(
+            studentAnswer.attempt_id
+          ) === numericAttemptId
+      );
 
     if (
       !answer ||
       !answer.selected_answer
     ) {
       skipped++;
-      continue;
-    }
-
-    // ---------------------------------------------------
-    // CHECK ANSWER
-    // ---------------------------------------------------
-
-    const isCorrect =
-      answer.selected_answer ===
-      testQuestion.questions.correct_answer;
-
-    const marks = isCorrect
-      ? Number(testQuestion.marks)
-      : -Number(
-          testQuestion.negative_marks ?? 0
-        );
-
-    if (isCorrect) {
+    } else if (
+      answer.is_correct === true
+    ) {
       correct++;
     } else {
       wrong++;
     }
-
-    totalScore += marks;
-
-    // ---------------------------------------------------
-    // SAVE QUESTION RESULT
-    // ---------------------------------------------------
-
-    updates.push(
-      supabase
-        .from("student_answers")
-        .update({
-          is_correct: isCorrect,
-          marks_obtained: marks,
-        })
-        .eq("id", answer.id)
-    );
   }
-
-  // -----------------------------------------------------
-  // UPDATE STUDENT ANSWERS
-  // -----------------------------------------------------
-
-  const updateResults =
-    await Promise.all(updates);
-
-  for (
-    const result of updateResults
-  ) {
-    if (result.error) {
-      throw result.error;
-    }
-  }
-
-  // -----------------------------------------------------
-  // CALCULATE TOTAL MARKS
-  // -----------------------------------------------------
-
-  const totalMarks =
-    attempt.tests.test_questions.reduce(
-      (
-        sum: number,
-        question: any
-      ) =>
-        sum +
-        Number(
-          question.marks ?? 0
-        ),
-      0
-    );
-
-  // -----------------------------------------------------
-  // CALCULATE SCORE PERCENTAGE
-  // -----------------------------------------------------
-
-  const percentage =
-    totalMarks === 0
-      ? 0
-      : Math.max(
-          0,
-          Number(
-            (
-              (totalScore /
-                totalMarks) *
-              100
-            ).toFixed(2)
-          )
-        );
-
-  // -----------------------------------------------------
-  // CALCULATE ACCURACY
-  // -----------------------------------------------------
 
   const attempted =
     correct + wrong;
 
   const accuracy =
-    attempted === 0
-      ? 0
-      : Number(
+    attempted > 0
+      ? Number(
           (
-            (correct /
-              attempted) *
+            (correct / attempted) *
             100
           ).toFixed(2)
-        );
-
-  // -----------------------------------------------------
-  // SUBMISSION TIME
-  // -----------------------------------------------------
-
-  const submittedAt =
-    new Date();
-
-  // -----------------------------------------------------
-  // CALCULATE DURATION
-  //
-  // started_at is stored when the attempt is created.
-  // duration_seconds = submitted_at - started_at
-  // -----------------------------------------------------
-
-  const startedAt =
-    new Date(
-      attempt.started_at
-    );
-
-  let durationSeconds = 0;
-
-  if (
-    !Number.isNaN(
-      startedAt.getTime()
-    )
-  ) {
-    durationSeconds =
-      Math.max(
-        0,
-        Math.floor(
-          (
-            submittedAt.getTime() -
-            startedAt.getTime()
-          ) / 1000
         )
-      );
-  }
+      : 0;
 
   // -----------------------------------------------------
-  // UPDATE ATTEMPT
-  // -----------------------------------------------------
-
-  const {
-    error: updateAttemptError,
-  } = await supabase
-    .from("test_attempts")
-    .update({
-      submitted_at:
-        submittedAt.toISOString(),
-
-      duration_seconds:
-        durationSeconds,
-
-      score:
-        totalScore,
-
-      percentage,
-
-      correct,
-
-      wrong,
-
-      skipped,
-
-      attempted,
-
-      accuracy,
-
-      status:
-        "Completed",
-    })
-    .eq("id", attemptId);
-
-  if (updateAttemptError) {
-    throw updateAttemptError;
-  }
-
-  // -----------------------------------------------------
-  // RETURN RESULT
+  // RETURN COMPLETE ATTEMPT
   // -----------------------------------------------------
 
   return {
-    success: true,
+    ...attempt,
 
-    attemptId,
+    tests: {
+      ...test,
 
-    score:
-      totalScore,
-
-    totalMarks,
-
-    percentage,
+      test_questions:
+        normalizedQuestions,
+    },
 
     correct,
-
     wrong,
-
     skipped,
-
     attempted,
-
-    totalQuestions:
-      attempt.tests.total_questions,
-
     accuracy,
-
-    durationSeconds,
-
-    submittedAt:
-      submittedAt.toISOString(),
   };
 }
+
+

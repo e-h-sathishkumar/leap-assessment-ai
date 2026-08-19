@@ -48,16 +48,26 @@ export interface Test {
   total_questions: number;
 
   created_by?: string | null;
-}
 
-export interface TestWithSubject extends Test {
+  // --------------------------------------------------
+  // Supabase subject relationship
+  // Supabase may return this as an array
+  // --------------------------------------------------
+
   subjects?: {
     id: number;
     name: string;
-  };
+  }[];
 }
 
-// =========================// ====================================================
+// ====================================================
+// Test With Subject
+// ====================================================
+
+export interface TestWithSubject
+  extends Test {}
+
+// ====================================================
 // Create Test Form
 // ====================================================
 
@@ -81,7 +91,7 @@ export interface CreateTestForm {
   description: string;
 
   // ------------------------------------------
-  // Academic Selection (New)
+  // Academic Selection
   // ------------------------------------------
 
   subjectIds: number[];
@@ -89,15 +99,15 @@ export interface CreateTestForm {
   chapterIds: number[];
 
   topicIds: number[];
+
   subjectNames: string[];
 
-chapterNames: string[];
+  chapterNames: string[];
 
-topicNames: string[];
+  topicNames: string[];
 
   // ------------------------------------------
   // Backward Compatibility
-  // (Will be removed after migration)
   // ------------------------------------------
 
   subjectId: number | null;
@@ -109,7 +119,9 @@ topicNames: string[];
   // ------------------------------------------
   // Question Configuration
   // ------------------------------------------
-questionType: string;
+
+  questionType: string;
+
   questionTypes: string[];
 
   difficultyLevels: string[];

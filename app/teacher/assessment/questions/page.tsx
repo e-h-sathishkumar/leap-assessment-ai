@@ -1,20 +1,29 @@
 "use client";
 
 import { useEffect, useState } from "react";
-
+import { useRouter } from "next/navigation";
+import { saveGeneratedAssessment } from "@/services/assessment/save-assessment.service";
 import {
-  Sparkles,
   ArrowLeft,
-  Loader2,
-  CheckCircle2,
   AlertCircle,
-  Trash2,
+  BookOpen,
+  Check,
+  CheckCircle2,
+  ChevronDown,
+  Clock,
   Edit3,
+  FileText,
+  Loader2,
+  Sparkles,
+  Target,
+  Trash2,
 } from "lucide-react";
 
 import {
-  saveGeneratedAssessment,
-} from "@/services/assessment/save-assessment.service";
+  getSubjects,
+  getChapters,
+  getTopics,
+} from "@/services/repository.service";
 
 // ============================================================
 // TYPES
@@ -36,86 +45,57 @@ interface SubjectSelection {
   subjectName: string;
   chapters: SelectedChapter[];
 }
+
 interface TestConfiguration {
   exam: string;
   className: string;
   testTitle: string;
-
   subjects: SubjectSelection[];
-
   questionTypes: string[];
-
   difficulty: string;
-
   totalQuestions: number;
-
   numberOfQuestions: number;
-
   durationMinutes: number;
-
   duration?: number;
-
   additionalInstructions?: string;
-
   hierarchyMode?: string;
-
   chapterOptional?: boolean;
-
   topicOptional?: boolean;
 }
 
 interface GenerationJob {
   subject: SubjectSelection;
-
   chapterText: string;
-
   topicText: string;
-
   numberOfQuestions: number;
 }
 
 interface GeneratedQuestion {
   id: string;
-
   question: string;
-
   options: string[];
-
   correctAnswer: string;
-
   explanation: string;
-
   hint: string;
-
   learningObjective: string;
-
   tags: string[];
-
   difficulty: string;
-
   marks: number;
-
   negativeMarks: number;
-
   questionType: string;
-
   status: string;
-
   subjectName: string;
-
   chapterName: string;
-
   topicName: string;
-
   review?: {
     status:
       | "Approved"
       | "Flagged"
       | "Modified";
-
     notes?: string;
   };
 }
+
 
 // ============================================================
 // BUILD AI GENERATION JOBS
@@ -124,18 +104,6 @@ interface GeneratedQuestion {
 function buildGenerationJobs(
   config: TestConfiguration
 ): GenerationJob[] {
-  /*
-   * IMPORTANT LEAP RULE
-   *
-   * Subject is mandatory.
-   *
-   * Chapter is optional.
-   *
-   * Topic is optional.
-   *
-   * Therefore we DO NOT filter subjects based
-   * on selected chapters.
-   */
 
   const validSubjects =
     config.subjects.filter(
@@ -158,19 +126,6 @@ function buildGenerationJobs(
     return [];
   }
 
-  /*
-   * Distribute questions across subjects.
-   *
-   * Example:
-   *
-   * Biology + Chemistry + Physics
-   * 30 questions
-   *
-   * Biology   = 10
-   * Chemistry = 10
-   * Physics   = 10
-   */
-
   const totalSubjects =
     validSubjects.length;
 
@@ -188,6 +143,7 @@ function buildGenerationJobs(
 
   validSubjects.forEach(
     (subject) => {
+
       let count =
         basePerSubject;
 
@@ -196,17 +152,6 @@ function buildGenerationJobs(
         remainder -= 1;
       }
 
-      /*
-       * Extract selected chapters.
-       *
-       * If none are selected:
-       *
-       * chapterText = ""
-       *
-       * This means AI is allowed to
-       * choose suitable content.
-       */
-
       const chapterNames =
         subject.chapters
           ?.map(
@@ -214,14 +159,6 @@ function buildGenerationJobs(
               chapter.chapterName
           )
           .filter(Boolean) || [];
-
-      /*
-       * Extract selected topics.
-       *
-       * If none are selected:
-       *
-       * topicText = ""
-       */
 
       const topicNames =
         subject.chapters
@@ -252,9 +189,8 @@ function buildGenerationJobs(
 
   return jobs;
 }
-
 // ============================================================
-// QUESTIONS PAGE
+// COMPONENT
 // ============================================================
 
 export default function QuestionsPage() {
@@ -1132,6 +1068,50 @@ function handleApproveAll() {
     } approved successfully.`
   );
 }
+// ==========================================================
+// EXPORT AS JSON
+// ==========================================================
+
+function handleExportAssessment() {
+  if (!configuration || !questions.length) {
+    setError("There is no assessment available to export.");
+    return;
+  }
+
+  const assessment = {
+    configuration,
+    questions,
+    exportedAt: new Date().toISOString(),
+  };
+
+  const blob = new Blob(
+    [JSON.stringify(assessment, null, 2)],
+    {
+      type: "application/json",
+    }
+  );
+
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+
+  link.href = url;
+
+  link.download =
+    `${configuration.testTitle || "LEAP-Assessment"}`
+      .replace(/[^a-z0-9-_]+/gi, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "") +
+    ".json";
+
+  document.body.appendChild(link);
+
+  link.click();
+
+  document.body.removeChild(link);
+
+  URL.revokeObjectURL(url);
+}
   // ==========================================================
   // SAVE TEST
   // ==========================================================
@@ -1903,3 +1883,7 @@ function handleApproveAll() {
     </div>
   );
 }
+
+
+
+

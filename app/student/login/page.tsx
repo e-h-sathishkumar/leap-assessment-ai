@@ -63,7 +63,7 @@ export default function StudentLoginPage() {
         return;
       }
 
-      router.replace("/student");
+      router.replace("/student/dashboard");
       router.refresh();
     } catch (err) {
       console.error(

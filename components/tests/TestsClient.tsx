@@ -107,7 +107,7 @@ function handleView(testId: number) {
       return (
         test.title.toLowerCase().includes(keyword) ||
         test.exam.toLowerCase().includes(keyword) ||
-        test.subjects?.name
+        test.subjects?.[0]?.name
           ?.toLowerCase()
           .includes(keyword) ||
         test.status.toLowerCase().includes(keyword)
@@ -202,7 +202,7 @@ function handleView(testId: number) {
                   </td>
 
                   <td className="p-3">
-                    {test.subjects?.name}
+                    {test.subjects?.[0]?.name}
                   </td>
 
                   <td className="p-3">
@@ -260,3 +260,5 @@ function handleView(testId: number) {
     </div>
   );
 }
+
+

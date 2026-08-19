@@ -29,61 +29,97 @@ export default function TestInstructions({
     try {
       setStarting(true);
       setError("");
+// -------------------------------------------------
+// GET AUTHENTICATED STUDENT
+// -------------------------------------------------
 
-      // -------------------------------------------------
-      // GET AUTHENTICATED STUDENT
-      // -------------------------------------------------
+const {
+  data: { session },
+  error: authError,
+} = await supabase.auth.getSession();
 
-      const {
-        data: { user },
-        error: authError,
-      } = await supabase.auth.getUser();
+const user = session?.user ?? null;
 
-      if (authError) {
-        console.error(
-          "AUTH ERROR:",
-          authError
-        );
+console.log(
+  "========== TEST START AUTH CHECK =========="
+);
 
-        throw new Error(
-          authError.message
-        );
-      }
+console.log(
+  "User:",
+  user?.id
+);
 
-      if (!user) {
-        throw new Error(
-          "Student session has expired. Please login again."
-        );
-      }
+console.log(
+  "Email:",
+  user?.email
+);
 
-      // -------------------------------------------------
-      // REAL SUPABASE STUDENT ID
-      // -------------------------------------------------
+console.log(
+  "Session exists:",
+  !!session
+);
 
-      const studentId = user.id;
+console.log(
+  "Access token exists:",
+  !!session?.access_token
+);
 
-      console.log(
-        "========================================"
-      );
+console.log(
+  "==========================================="
+);
 
-      console.log(
-        "STUDENT AUTHENTICATION"
-      );
+// -------------------------------------------------
+// AUTH ERROR
+// -------------------------------------------------
 
-      console.log(
-        "Student ID:",
-        studentId
-      );
+if (authError) {
+  console.error(
+    "AUTH ERROR:",
+    authError
+  );
 
-      console.log(
-        "Student Email:",
-        user.email
-      );
+  throw new Error(
+    authError.message
+  );
+}
 
-      console.log(
-        "========================================"
-      );
+// -------------------------------------------------
+// NO SESSION
+// -------------------------------------------------
 
+if (!user) {
+  throw new Error(
+    "Student session has expired. Please login again."
+  );
+}
+
+// -------------------------------------------------
+// REAL SUPABASE STUDENT ID
+// -------------------------------------------------
+
+const studentId = user.id;
+
+console.log(
+  "========================================"
+);
+
+console.log(
+  "STUDENT AUTHENTICATION"
+);
+
+console.log(
+  "Student ID:",
+  studentId
+);
+
+console.log(
+  "Student Email:",
+  user.email
+);
+
+console.log(
+  "========================================"
+);
       // -------------------------------------------------
       // TEST INFORMATION
       // -------------------------------------------------
