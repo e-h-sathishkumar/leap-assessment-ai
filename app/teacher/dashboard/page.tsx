@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -81,7 +81,7 @@ export default function TeacherDashboard() {
       description:
         "Create assessments using AI, Textbook, PDF, Video or Repository.",
       icon: BrainCircuit,
-      href: "/teacher/assessment/create",
+      href: "/teacher/assessment",
       color: "bg-indigo-600",
       iconBg: "bg-indigo-50",
       iconColor: "text-indigo-600",
@@ -208,7 +208,7 @@ export default function TeacherDashboard() {
             </Link>
 
             <Link
-              href="/teacher/assessment/create"
+              href="/teacher/assessment"
               className="text-sm font-medium text-slate-600 transition hover:text-blue-600"
             >
               Create Test
@@ -282,7 +282,7 @@ export default function TeacherDashboard() {
             {/* QUICK ACTION */}
 
             <Link
-              href="/teacher/assessment/create"
+              href="/teacher/assessment"
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-blue-700 shadow-lg transition hover:-translate-y-0.5 hover:bg-blue-50"
             >
               <BrainCircuit className="h-5 w-5" />
@@ -406,7 +406,7 @@ export default function TeacherDashboard() {
           <div className="grid gap-4 md:grid-cols-4">
 
             <Link
-              href="/teacher/assessment/create"
+              href="/teacher/assessment"
               className="rounded-xl border border-slate-200 bg-slate-50 p-4 transition hover:border-blue-300 hover:bg-blue-50"
             >
               <div className="text-sm font-bold text-blue-600">
@@ -482,3 +482,4 @@ export default function TeacherDashboard() {
     </main>
   );
 }
+
