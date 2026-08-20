@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -1022,7 +1022,368 @@ Return valid JSON only.
   }
 
 // ==========================================================
-// APPROVE ALL QUESTIONS
+  // ============================================================
+  // EXPORT QUESTION PAPER
+  // ============================================================
+
+  function exportQuestionPaper() {
+    if (!questions.length) {
+      setError("No questions are available to export.");
+      return;
+    }
+
+    const approvedQuestions = questions.filter(
+      (question) => question.status === "Approved"
+    );
+
+    const questionsToExport =
+      approvedQuestions.length > 0
+        ? approvedQuestions
+        : questions;
+
+    const title =
+      configuration?.testTitle ||
+      "LEAP Assessment Question Paper";
+
+    const exam =
+      configuration?.exam || "";
+
+    const className =
+      configuration?.className || "";
+
+    const duration =
+      configuration?.durationMinutes ||
+      configuration?.duration ||
+      "";
+
+    const totalMarks = questionsToExport.reduce(
+      (sum, question) =>
+        sum + Number(question.marks ?? 0),
+      0
+    );
+
+    const escapeHtml = (value: unknown) =>
+      String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+
+    const optionsHtml = (options: string[]) => {
+      if (!options || !options.length) {
+        return "";
+      }
+
+      return `
+        <div class="options">
+          ${options
+            .map(
+              (option, index) => `
+                <div class="option">
+                  <strong>${String.fromCharCode(65 + index)}.</strong>
+                  ${escapeHtml(option)}
+                </div>
+              `
+            )
+            .join("")}
+        </div>
+      `;
+    };
+
+    const questionsHtml = questionsToExport
+      .map(
+        (question, index) => `
+          <div class="question">
+            <div class="question-text">
+              <strong>${index + 1}.</strong>
+              ${escapeHtml(question.question)}
+            </div>
+
+            ${optionsHtml(question.options || [])}
+
+            <div class="question-meta">
+              <span>
+                Subject: ${escapeHtml(question.subjectName)}
+              </span>
+
+              <span>
+                Difficulty: ${escapeHtml(question.difficulty)}
+              </span>
+
+              <span>
+                Marks: ${Number(question.marks ?? 0)}
+              </span>
+            </div>
+          </div>
+        `
+      )
+      .join("");
+
+    const printWindow = window.open(
+      "",
+      "_blank",
+      "width=900,height=1000"
+    );
+
+    if (!printWindow) {
+      setError(
+        "Unable to open the export window. Please allow pop-ups for this site."
+      );
+      return;
+    }
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8" />
+
+        <title>${escapeHtml(title)}</title>
+
+        <style>
+          @page {
+            size: A4;
+            margin: 18mm;
+          }
+
+          * {
+            box-sizing: border-box;
+          }
+
+          body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, Helvetica, sans-serif;
+            color: #111827;
+            background: white;
+            font-size: 12pt;
+            line-height: 1.55;
+          }
+
+          .paper {
+            width: 100%;
+          }
+
+          .header {
+            text-align: center;
+            border-bottom: 2px solid #111827;
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+          }
+
+          .school {
+            font-size: 18pt;
+            font-weight: 700;
+            margin-bottom: 4px;
+          }
+
+          .platform {
+            font-size: 11pt;
+            color: #475569;
+            margin-bottom: 8px;
+          }
+
+          .title {
+            font-size: 16pt;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-top: 8px;
+          }
+
+          .details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px 30px;
+            margin: 14px 0 20px;
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            background: #f8fafc;
+          }
+
+          .detail {
+            font-size: 10.5pt;
+          }
+
+          .instructions {
+            margin: 15px 0;
+          }
+
+          .instructions-title {
+            font-weight: 700;
+            margin-bottom: 5px;
+          }
+
+          .question {
+            margin-bottom: 20px;
+            page-break-inside: avoid;
+          }
+
+          .question-text {
+            font-size: 12pt;
+            margin-bottom: 8px;
+          }
+
+          .options {
+            margin-left: 25px;
+            margin-top: 6px;
+          }
+
+          .option {
+            margin: 4px 0;
+          }
+
+          .question-meta {
+            margin-top: 8px;
+            padding-top: 5px;
+            border-top: 1px dotted #cbd5e1;
+            font-size: 8.5pt;
+            color: #64748b;
+            display: flex;
+            gap: 18px;
+          }
+
+          .footer {
+            margin-top: 25px;
+            padding-top: 10px;
+            border-top: 1px solid #cbd5e1;
+            text-align: center;
+            font-size: 8.5pt;
+            color: #64748b;
+          }
+
+          @media print {
+            .no-print {
+              display: none !important;
+            }
+          }
+
+          .print-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 18px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+          }
+
+          @media print {
+            .print-button {
+              display: none;
+            }
+          }
+        </style>
+      </head>
+
+      <body>
+
+        <button
+          class="print-button"
+          onclick="window.print()"
+        >
+          Print / Save as PDF
+        </button>
+
+        <div class="paper">
+
+          <div class="header">
+            <div class="school">
+              LEAP Assessment AI
+            </div>
+
+            <div class="platform">
+              AI-Powered Assessment Platform
+            </div>
+
+            <div class="title">
+              ${escapeHtml(title)}
+            </div>
+          </div>
+
+          <div class="details">
+
+            <div class="detail">
+              <strong>Exam:</strong>
+              ${escapeHtml(exam)}
+            </div>
+
+            <div class="detail">
+              <strong>Class:</strong>
+              ${escapeHtml(className)}
+            </div>
+
+            <div class="detail">
+              <strong>Total Questions:</strong>
+              ${questionsToExport.length}
+            </div>
+
+            <div class="detail">
+              <strong>Total Marks:</strong>
+              ${totalMarks}
+            </div>
+
+            <div class="detail">
+              <strong>Duration:</strong>
+              ${
+                duration
+                  ? `${escapeHtml(duration)} minutes`
+                  : "Not specified"
+              }
+            </div>
+
+            <div class="detail">
+              <strong>Questions Exported:</strong>
+              ${approvedQuestions.length > 0
+                ? "Approved Questions"
+                : "All Generated Questions"}
+            </div>
+
+          </div>
+
+          <div class="instructions">
+
+            <div class="instructions-title">
+              General Instructions:
+            </div>
+
+            <ol>
+              <li>Read all questions carefully.</li>
+              <li>Answer all questions as instructed.</li>
+              ${
+                configuration?.additionalInstructions
+                  ? `<li>${escapeHtml(
+                      configuration.additionalInstructions
+                    )}</li>`
+                  : ""
+              }
+            </ol>
+
+          </div>
+
+          <div class="questions">
+            ${questionsHtml}
+          </div>
+
+          <div class="footer">
+            Generated using LEAP Assessment AI
+          </div>
+
+        </div>
+
+      </body>
+      </html>
+    `);
+
+    printWindow.document.close();
+
+    printWindow.focus();
+  }
+
+  // APPROVE ALL QUESTIONS
 // ==========================================================
 
 function handleApproveAll() {
@@ -1605,6 +1966,19 @@ function handleExportAssessment() {
 
                   <button
                     type="button"
+                    onClick={exportQuestionPaper}
+                    disabled={
+                      loading ||
+                      questions.length === 0
+                    }
+                    className="flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-semibold text-blue-700 transition hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <FileText className="h-4 w-4" />
+                    Export Question Paper
+                  </button>
+
+                  <button
+                    type="button"
                     onClick={handleApproveAll}
                     disabled={
                       loading ||
@@ -1883,6 +2257,8 @@ function handleExportAssessment() {
     </div>
   );
 }
+
+
 
 
 
